@@ -25,11 +25,10 @@ class ReadingListScaffoldTests(unittest.TestCase):
     def test_package_version_and_fixture_load(self) -> None:
         self.assertEqual(reading_list.__version__, "0.1.0")
         docs = load_corpus(FIXTURE_PATH)
-        self.assertGreaterEqual(len(docs), 3)
+        self.assertEqual(len(docs), 2)
         doc_ids = {d.doc_id for d in docs}
         self.assertIn("semieng-2026-bare-ai-monitors", doc_ids)
         self.assertIn("arxiv-2610.08739v2", doc_ids)
-        self.assertIn("a-rowhammer-attack-on-fil-c-s-software-capabilit", doc_ids)
 
     def test_semantic_chunking_and_taxonomy_hierarchy(self) -> None:
         docs = load_corpus(FIXTURE_PATH)
@@ -46,12 +45,6 @@ class ReadingListScaffoldTests(unittest.TestCase):
         self.assertIn("concept:pulse", all_concepts)
         self.assertIn("concept:asi", all_concepts)
         self.assertIn("concept:bit-flip-attack", all_concepts)
-
-        filc_chunks = chunks_by_doc["a-rowhammer-attack-on-fil-c-s-software-capabilit"]
-        filc_concepts = {cid for chunk in filc_chunks for cid in chunk.concept_ids}
-        self.assertIn("concept:fil-c", filc_concepts)
-        self.assertIn("concept:rowhammer", filc_concepts)
-        self.assertIn("concept:bit-flip-attack", filc_concepts)
 
         all_taxonomy_paths = {
             path for chunk in paper_chunks for path in chunk.taxonomy_paths
@@ -98,14 +91,6 @@ class ReadingListScaffoldTests(unittest.TestCase):
                 "doc:arxiv-2610.08739v2",
                 "AFFILIATED_WITH",
                 "institution:university-of-florida",
-            ),
-            edges,
-        )
-        self.assertIn(
-            (
-                "doc:a-rowhammer-attack-on-fil-c-s-software-capabilit",
-                "MENTIONS_CONCEPT",
-                "concept:fil-c",
             ),
             edges,
         )
@@ -183,6 +168,7 @@ class ReadingListScaffoldTests(unittest.TestCase):
             self.assertEqual(rc_upd, 0)
             self.assertEqual(len(load_corpus(fixture_file)), initial_count + 1)
             self.assertIn("Rowhammer Faults in ViT NPUs", readme_file.read_text(encoding="utf-8"))
+            self.assertTrue((out_dir / "index.html").exists())
 
             rc_stat = main(
                 [

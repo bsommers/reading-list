@@ -27,6 +27,7 @@ from reading_list.models import (
     SemanticChunk,
     TaxonomyNode,
 )
+from reading_list.site import render_github_pages_html
 
 __version__ = "0.1.0"
 
@@ -47,6 +48,7 @@ __all__ = [
     "classify_content",
     "enrich_document",
     "extract_arxiv_id",
+    "render_github_pages_html",
     "render_summary_markdown",
     "structure_abstract_into_sections",
     "sync_readme_corpus_section",

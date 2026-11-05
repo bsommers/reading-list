@@ -25,11 +25,13 @@ from reading_list.graph import (
     render_summary_markdown,
 )
 from reading_list.models import Document, DocumentRelation, SemanticChunk
+from reading_list.site import render_github_pages_html
 
 DEFAULT_FIXTURE = Path("tests/fixtures/seed_corpus.json")
 DEFAULT_CORPUS = Path("input/corpus.json")
 DEFAULT_OUTPUT = Path("output")
 DEFAULT_README = Path("README.md")
+DEFAULT_SISTER_DB = Path("../reading-db")
 
 
 def _slugify(text: str) -> str:
@@ -65,7 +67,7 @@ def save_corpus(path: Path, documents: list[Document], version: str = "0.1.0") -
 
 
 def run_build(input_path: Path, output_dir: Path) -> dict[str, Path]:
-    """Chunk documents, build word clouds, taxonomy index, and knowledge graph into `output_dir`."""
+    """Chunk documents, build word clouds, taxonomy index, knowledge graph, and GitHub Pages HTML into `output_dir`."""
     documents = load_corpus(input_path)
     chunks_by_doc: dict[str, list[SemanticChunk]] = {
         doc.doc_id: chunk_document(doc) for doc in documents
@@ -75,6 +77,9 @@ def run_build(input_path: Path, output_dir: Path) -> dict[str, Path]:
     kg = build_knowledge_graph(documents, chunks_by_doc)
     taxonomy_index = build_taxonomy_index(documents, chunks_by_doc)
     summary_md = render_summary_markdown(documents, chunks_by_doc, word_cloud, kg)
+    site_html = render_github_pages_html(
+        documents, chunks_by_doc, word_cloud, taxonomy_index, kg
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -109,12 +114,19 @@ def run_build(input_path: Path, output_dir: Path) -> dict[str, Path]:
     summary_path = output_dir / "summary.md"
     summary_path.write_text(summary_md, encoding="utf-8")
 
+    index_html_path = output_dir / "index.html"
+    index_html_path.write_text(site_html, encoding="utf-8")
+
+    nojekyll_path = output_dir / ".nojekyll"
+    nojekyll_path.write_text("", encoding="utf-8")
+
     return {
         "chunks": chunks_path,
         "word_cloud": wc_path,
         "taxonomy_tree": tax_path,
         "knowledge_graph": kg_path,
         "summary": summary_path,
+        "index_html": index_html_path,
     }
 
 
@@ -189,7 +201,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     upd_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     upd_p.add_argument("--readme", type=Path, default=DEFAULT_README)
 
-    # 2. sync (alias for update)
+    # 2. publish-db (enrich & publish artifacts + GitHub Pages site to the sister reading-db repo)
+    pub_p = sub.add_parser(
+        "publish-db",
+        help="Enrich and build all knowledge-graph JSONs, Markdown reports, and the interactive GitHub Pages site into the sister reading-db repository.",
+    )
+    pub_p.add_argument(
+        "--db-dir",
+        type=Path,
+        default=DEFAULT_SISTER_DB,
+        help="Path to the sister reading-db repository (default: ../reading-db).",
+    )
+
+    # 3. sync (alias for update)
     sync_p = sub.add_parser(
         "sync",
         help="Alias for 'update': enrich, sync input/corpus.json -> tests/fixtures/seed_corpus.json & README.md, and rebuild output/.",
@@ -199,7 +223,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sync_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     sync_p.add_argument("--readme", type=Path, default=DEFAULT_README)
 
-    # 3. seed-input
+    # 4. seed-input
     seed_p = sub.add_parser(
         "seed-input",
         help="Copy the tracked seed fixture corpus into input/corpus.json.",
@@ -207,15 +231,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     seed_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     seed_p.add_argument("--output", type=Path, default=DEFAULT_CORPUS)
 
-    # 4. build
+    # 5. build
     build_p = sub.add_parser(
         "build",
-        help="Generate semantic chunks, word cloud, taxonomy tree, and knowledge graph.",
+        help="Generate semantic chunks, word cloud, taxonomy tree, knowledge graph, and GitHub Pages index.html.",
     )
     build_p.add_argument("--input", type=Path, default=DEFAULT_FIXTURE)
     build_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
 
-    # 5. classify (ad-hoc content / snippet / file classification)
+    # 6. classify (ad-hoc content / snippet / file classification)
     cls_p = sub.add_parser(
         "classify",
         help="Quickly classify a text snippet, abstract, or file without modifying the corpus.",
@@ -225,7 +249,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     cls_p.add_argument("--file", type=Path, help="Path to a text/markdown file to classify.")
     cls_p.add_argument("--json", action="store_true", help="Output raw JSON classification.")
 
-    # 6. add (track & classify a new document into corpus and run the full update pipeline)
+    # 7. add (track & classify a new document into corpus and run the full update pipeline)
     add_p = sub.add_parser(
         "add",
         help="Track, enrich, and classify a new article, paper, or note into the reading list and sync the repo.",
@@ -270,7 +294,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     add_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT, help="Output directory to rebuild.")
 
-    # 7. list (inspect & filter tracked reading list)
+    # 8. list (inspect & filter tracked reading list)
     list_p = sub.add_parser(
         "list",
         help="List and filter tracked documents by status, priority, taxonomy category, concept, or keyword.",
@@ -284,7 +308,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     list_p.add_argument("--concept", default="", help="Substring filter on concept ID or label.")
     list_p.add_argument("--query", default="", help="Full-text keyword filter across title, content, and notes.")
 
-    # 8. status (update tracking status/priority/notes on an existing document)
+    # 9. status (update tracking status/priority/notes on an existing document)
     stat_p = sub.add_parser(
         "status",
         help="Update reading status, priority, tags, or notes for a tracked document.",
@@ -320,6 +344,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Seeded input corpus at {args.output}")
         return 0
 
+    if args.command == "publish-db":
+        db_dir = args.db_dir
+        corpus_path = db_dir / "corpus.json"
+        readme_path = db_dir / "README.md"
+        res = run_update_pipeline(
+            corpus_path=corpus_path,
+            fixture_path=corpus_path,
+            output_dir=db_dir,
+            readme_path=readme_path,
+            sync_fixture=True,
+        )
+        print(f"[published] {len(res['documents'])} documents to {db_dir}")
+        for name, path in res["artifacts"].items():
+            print(f"  [ok] {name}: {path}")
+        return 0
+
     if args.command in {"update", "sync"}:
         res = run_update_pipeline(
             corpus_path=args.corpus,
@@ -334,7 +374,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             print(f"[step 1/3] Verified metadata & semantic sections for {len(docs)} documents")
         print(f"[step 2/3] Synced {args.corpus} -> {args.fixture} and {args.readme}")
-        print("[step 3/3] Rebuilt knowledge graph, taxonomy tree, word cloud, and dynamic Mermaid summary:")
+        print("[step 3/3] Rebuilt knowledge graph, taxonomy tree, word cloud, and GitHub Pages site:")
         for name, path in res["artifacts"].items():
             print(f"  [ok] {name}: {path}")
         return 0
