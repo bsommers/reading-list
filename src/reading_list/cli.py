@@ -14,6 +14,11 @@ from reading_list.chunker import (
     chunk_document,
     classify_content,
 )
+from reading_list.enrich import (
+    enrich_document,
+    extract_arxiv_id,
+    sync_readme_corpus_section,
+)
 from reading_list.graph import (
     build_knowledge_graph,
     build_taxonomy_index,
@@ -24,6 +29,7 @@ from reading_list.models import Document, DocumentRelation, SemanticChunk
 DEFAULT_FIXTURE = Path("tests/fixtures/seed_corpus.json")
 DEFAULT_CORPUS = Path("input/corpus.json")
 DEFAULT_OUTPUT = Path("output")
+DEFAULT_README = Path("README.md")
 
 
 def _slugify(text: str) -> str:
@@ -112,6 +118,38 @@ def run_build(input_path: Path, output_dir: Path) -> dict[str, Path]:
     }
 
 
+def run_update_pipeline(
+    corpus_path: Path = DEFAULT_CORPUS,
+    fixture_path: Path = DEFAULT_FIXTURE,
+    output_dir: Path = DEFAULT_OUTPUT,
+    readme_path: Path = DEFAULT_README,
+    sync_fixture: bool = True,
+) -> dict[str, Any]:
+    """Execute the full 3-step update: (1) enrich & classify, (2) sync tracked corpus & README, (3) rebuild outputs."""
+    ensure_corpus_file(corpus_path, fixture_path)
+    docs = load_corpus(corpus_path)
+
+    enriched_docs: list[Document] = []
+    enriched_ids: list[str] = []
+    for doc in docs:
+        updated_doc, changed = enrich_document(doc)
+        enriched_docs.append(updated_doc)
+        if changed:
+            enriched_ids.append(updated_doc.doc_id)
+
+    save_corpus(corpus_path, enriched_docs)
+    if sync_fixture:
+        save_corpus(fixture_path, enriched_docs)
+        sync_readme_corpus_section(readme_path, enriched_docs)
+
+    artifacts = run_build(corpus_path, output_dir)
+    return {
+        "documents": enriched_docs,
+        "enriched_ids": enriched_ids,
+        "artifacts": artifacts,
+    }
+
+
 def _print_classification_card(result: dict[str, Any], doc_id: str | None = None) -> None:
     header = f"Classification Summary ({doc_id})" if doc_id else "Classification Summary"
     print(f"=== {header} ===")
@@ -141,7 +179,27 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # 1. seed-input
+    # 1. update (single command for steps 1, 2, 3: enrich, sync tracked corpus + README, rebuild all outputs)
+    upd_p = sub.add_parser(
+        "update",
+        help="Single command to (1) enrich & classify corpus entries, (2) sync git-tracked seed_corpus.json & README.md, and (3) rebuild all output/ artifacts.",
+    )
+    upd_p.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    upd_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
+    upd_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
+    upd_p.add_argument("--readme", type=Path, default=DEFAULT_README)
+
+    # 2. sync (alias for update)
+    sync_p = sub.add_parser(
+        "sync",
+        help="Alias for 'update': enrich, sync input/corpus.json -> tests/fixtures/seed_corpus.json & README.md, and rebuild output/.",
+    )
+    sync_p.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
+    sync_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
+    sync_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
+    sync_p.add_argument("--readme", type=Path, default=DEFAULT_README)
+
+    # 3. seed-input
     seed_p = sub.add_parser(
         "seed-input",
         help="Copy the tracked seed fixture corpus into input/corpus.json.",
@@ -149,7 +207,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     seed_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     seed_p.add_argument("--output", type=Path, default=DEFAULT_CORPUS)
 
-    # 2. build
+    # 4. build
     build_p = sub.add_parser(
         "build",
         help="Generate semantic chunks, word cloud, taxonomy tree, and knowledge graph.",
@@ -157,7 +215,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     build_p.add_argument("--input", type=Path, default=DEFAULT_FIXTURE)
     build_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
 
-    # 3. classify (ad-hoc content / snippet / file classification)
+    # 5. classify (ad-hoc content / snippet / file classification)
     cls_p = sub.add_parser(
         "classify",
         help="Quickly classify a text snippet, abstract, or file without modifying the corpus.",
@@ -167,10 +225,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     cls_p.add_argument("--file", type=Path, help="Path to a text/markdown file to classify.")
     cls_p.add_argument("--json", action="store_true", help="Output raw JSON classification.")
 
-    # 4. add (track & classify a new document into corpus and rebuild output)
+    # 6. add (track & classify a new document into corpus and run the full update pipeline)
     add_p = sub.add_parser(
         "add",
-        help="Track and classify a new article, paper, or note of interest into the reading list.",
+        help="Track, enrich, and classify a new article, paper, or note into the reading list and sync the repo.",
     )
     add_p.add_argument("--id", dest="doc_id", default="", help="Explicit document ID (auto-generated from title if omitted).")
     add_p.add_argument("--title", required=True, help="Title of the article, paper, or note.")
@@ -204,9 +262,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     add_p.add_argument("--tags", default="", help="Comma-separated custom tags.")
     add_p.add_argument("--notes", default="", help="Personal tracking notes.")
     add_p.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS, help="Corpus file to update.")
+    add_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE, help="Tracked seed fixture to keep in sync.")
+    add_p.add_argument(
+        "--no-sync-fixture",
+        action="store_true",
+        help="Do not automatically sync changes to tests/fixtures/seed_corpus.json.",
+    )
     add_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT, help="Output directory to rebuild.")
 
-    # 5. list (inspect & filter tracked reading list)
+    # 7. list (inspect & filter tracked reading list)
     list_p = sub.add_parser(
         "list",
         help="List and filter tracked documents by status, priority, taxonomy category, concept, or keyword.",
@@ -220,7 +284,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     list_p.add_argument("--concept", default="", help="Substring filter on concept ID or label.")
     list_p.add_argument("--query", default="", help="Full-text keyword filter across title, content, and notes.")
 
-    # 6. status (update tracking status/priority/notes on an existing document)
+    # 8. status (update tracking status/priority/notes on an existing document)
     stat_p = sub.add_parser(
         "status",
         help="Update reading status, priority, tags, or notes for a tracked document.",
@@ -240,6 +304,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     stat_p.add_argument("--tags", help="Comma-separated tags (replaces existing tags if provided).")
     stat_p.add_argument("--notes", help="Updated personal notes.")
     stat_p.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS, help="Corpus JSON to update.")
+    stat_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE, help="Tracked seed fixture to keep in sync.")
+    stat_p.add_argument(
+        "--no-sync-fixture",
+        action="store_true",
+        help="Do not automatically sync changes to tests/fixtures/seed_corpus.json.",
+    )
     stat_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT, help="Output directory to rebuild.")
 
     args = parser.parse_args(argv)
@@ -250,8 +320,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Seeded input corpus at {args.output}")
         return 0
 
+    if args.command in {"update", "sync"}:
+        res = run_update_pipeline(
+            corpus_path=args.corpus,
+            fixture_path=args.fixture,
+            output_dir=args.output_dir,
+            readme_path=args.readme,
+            sync_fixture=True,
+        )
+        docs = res["documents"]
+        if res["enriched_ids"]:
+            print(f"[step 1/3] Enriched metadata/sections for: {', '.join(res['enriched_ids'])}")
+        else:
+            print(f"[step 1/3] Verified metadata & semantic sections for {len(docs)} documents")
+        print(f"[step 2/3] Synced {args.corpus} -> {args.fixture} and {args.readme}")
+        print("[step 3/3] Rebuilt knowledge graph, taxonomy tree, word cloud, and dynamic Mermaid summary:")
+        for name, path in res["artifacts"].items():
+            print(f"  [ok] {name}: {path}")
+        return 0
+
     if args.command == "build":
-        outputs = run_build(args.input, args.output_dir)
+        source = args.input if args.input.exists() else DEFAULT_FIXTURE
+        outputs = run_build(source, args.output_dir)
         for name, path in outputs.items():
             print(f"[ok] {name}: {path}")
         return 0
@@ -268,7 +358,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     if args.command == "add":
-        corpus_path = ensure_corpus_file(args.corpus)
+        corpus_path = ensure_corpus_file(args.corpus, args.fixture)
         docs = load_corpus(corpus_path)
 
         content = args.file.read_text(encoding="utf-8") if args.file else args.text
@@ -283,6 +373,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             for target in [c.strip() for c in args.cites.split(",") if c.strip()]:
                 relations.append(DocumentRelation("CITES", target))
 
+        identifiers: dict[str, str] = {}
+        arxiv_id = extract_arxiv_id(args.url)
+        if arxiv_id:
+            identifiers["arxiv"] = arxiv_id
+            identifiers["pdf_url"] = f"https://arxiv.org/pdf/{arxiv_id}"
+
         new_doc = Document(
             doc_id=doc_id,
             title=args.title,
@@ -291,7 +387,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             published_date=args.published,
             authors=[a.strip() for a in args.authors.split(",") if a.strip()],
             institutions=[i.strip() for i in args.institutions.split(",") if i.strip()],
-            identifiers={},
+            identifiers=identifiers,
             relations=relations,
             content=content,
             reading_status=args.status,
@@ -299,15 +395,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             tags=[t.strip() for t in args.tags.split(",") if t.strip()],
             notes=args.notes,
         )
+        new_doc, _ = enrich_document(new_doc)
 
-        # Replace if doc_id already exists, otherwise append
         updated_docs = [d for d in docs if d.doc_id != doc_id] + [new_doc]
         save_corpus(corpus_path, updated_docs)
+        should_sync = not args.no_sync_fixture and corpus_path == DEFAULT_CORPUS
+        if should_sync:
+            save_corpus(args.fixture, updated_docs)
+            sync_readme_corpus_section(DEFAULT_README, updated_docs)
         run_build(corpus_path, args.output_dir)
 
-        cls_result = classify_content(content, title=args.title)
+        cls_result = classify_content(new_doc.content, title=new_doc.title)
         _print_classification_card(cls_result, doc_id=doc_id)
         print(f"[saved] {corpus_path} (total documents: {len(updated_docs)})")
+        if should_sync:
+            print(f"[synced] {args.fixture} & {DEFAULT_README}")
         return 0
 
     if args.command == "list":
@@ -357,7 +459,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     if args.command == "status":
-        corpus_path = ensure_corpus_file(args.corpus)
+        corpus_path = ensure_corpus_file(args.corpus, args.fixture)
         docs = load_corpus(corpus_path)
         updated: list[Document] = []
         target_found = False
@@ -382,6 +484,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.error(f"Document ID '{args.doc_id}' not found in {corpus_path}")
 
         save_corpus(corpus_path, updated)
+        if not args.no_sync_fixture and corpus_path == DEFAULT_CORPUS:
+            save_corpus(args.fixture, updated)
+            sync_readme_corpus_section(DEFAULT_README, updated)
         run_build(corpus_path, args.output_dir)
         print(f"[updated] {args.doc_id} in {corpus_path}")
         return 0

@@ -6,6 +6,12 @@ from reading_list.chunker import (
     classify_content,
     tokenize,
 )
+from reading_list.enrich import (
+    enrich_document,
+    extract_arxiv_id,
+    structure_abstract_into_sections,
+    sync_readme_corpus_section,
+)
 from reading_list.graph import (
     build_knowledge_graph,
     build_taxonomy_index,
@@ -39,6 +45,10 @@ __all__ = [
     "build_word_cloud",
     "chunk_document",
     "classify_content",
+    "enrich_document",
+    "extract_arxiv_id",
     "render_summary_markdown",
+    "structure_abstract_into_sections",
+    "sync_readme_corpus_section",
     "tokenize",
 ]

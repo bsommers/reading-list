@@ -13,10 +13,11 @@ A curated reading-list repository and knowledge-graph indexer for technical arti
 | `output/` | Reproducible knowledge graph, semantic chunks, word clouds, and taxonomy artifacts | ignored except `README.md` |
 | `README.md` | Project overview, layout table, quickstart, and status | tracked |
 
-## Initial Seed Corpus
+## Tracked Reading List Corpus (`tests/fixtures/seed_corpus.json`)
 
-1. **Technical Article:** [*On-Chip Monitors Detect Bit-Flip Attacks in AI Accelerators (UF, UT Dallas, RPI)*](https://semiengineering.com/on-chip-monitors-detect-bit-flip-attacks-in-ai-accelerators-uf-ut-dallas-rpi/) (`semieng-2026-bare-ai-monitors`)
-2. **Academic Paper:** [*BARE-AI: Bit-Flip Attack Resilience in AI Hardware through Built-in Performance Monitors*](https://arxiv.org/abs/2610.08739v2) (`arxiv-2610.08739v2` — Habibur Rahaman, Swastik Bhattacharya, Sanjay Das, Kanad Basu, Swarup Bhunia; UF, UT Dallas, RPI)
+1. **Technical Article:** [*On-Chip Monitors Detect Bit-Flip Attacks in AI Accelerators (UF, UT Dallas, RPI)*](https://semiengineering.com/on-chip-monitors-detect-bit-flip-attacks-in-ai-accelerators-uf-ut-dallas-rpi/) (`semieng-2026-bare-ai-monitors` — Semiconductor Engineering Staff — University of Florida; University of Texas at Dallas; Rensselaer Polytechnic Institute)
+2. **Academic Paper:** [*BARE-AI: Bit-Flip Attack Resilience in AI Hardware through Built-in Performance Monitors*](https://arxiv.org/abs/2610.08739v2) (`arxiv-2610.08739v2` — Habibur Rahaman, Swastik Bhattacharya, Sanjay Das, Kanad Basu, Swarup Bhunia — University of Florida; University of Texas at Dallas; Rensselaer Polytechnic Institute)
+3. **Academic Paper:** [*A Rowhammer attack on Fil-C's software capabilities*](https://arxiv.org/abs/2610.33748) (`a-rowhammer-attack-on-fil-c-s-software-capabilit` — Amir Naseredini, Suhas Viswanath, Martin Berger)
 
 ## Quickstart: Tracking & Classifying Content
 
@@ -31,24 +32,26 @@ PYTHONPATH=src python3 -m reading_list.cli classify \
 
 # 3. List and filter tracked documents by status, priority, taxonomy, or concept
 PYTHONPATH=src python3 -m reading_list.cli list
-PYTHONPATH=src python3 -m reading_list.cli list --concept bare-ai
+PYTHONPATH=src python3 -m reading_list.cli list --concept rowhammer
 
-# 4. Add & classify a new paper/article/note into input/corpus.json and rebuild output/
+# 4. Add & classify a new paper/article/note (auto-syncs to tests/fixtures/seed_corpus.json and rebuilds output/)
 PYTHONPATH=src python3 -m reading_list.cli add \
   --title "Your Paper or Article Title" \
   --type academic_paper \
   --url "https://arxiv.org/abs/..." \
   --text "Paste abstract or notes here..." \
-  --cites arxiv-2610.08739v2 \
   --priority high
 
-# 5. Update reading status, priority, or notes on any tracked document
-PYTHONPATH=src python3 -m reading_list.cli status arxiv-2610.08739v2 \
+# 5. Or if you edited input/corpus.json directly, sync it to the tracked repo corpus and rebuild output/
+PYTHONPATH=src python3 -m reading_list.cli sync
+
+# 6. Update reading status, priority, or notes on any tracked document
+PYTHONPATH=src python3 -m reading_list.cli status a-rowhammer-attack-on-fil-c-s-software-capabilit \
   --set reading \
   --priority high \
-  --notes "Key baseline for runtime APC + PULSE monitoring at 28nm"
+  --notes "DRAM upper-bound InvisiCaps bit-flip bypasses DDR3/DDR4 TRR"
 ```
 
 ## Status
 
-Scaffold + quick document tracking (`add`, `list`, `status`), instant content classification (`classify`), semantic chunking, word-cloud generation, and OntoLogic-ready knowledge graph builder operational (`v0.1.0`).
+Scaffold + quick document tracking (`add`, `list`, `status`, `sync`), instant content classification (`classify`), semantic chunking, word-cloud generation, and OntoLogic-ready knowledge graph builder operational (`v0.1.0`).

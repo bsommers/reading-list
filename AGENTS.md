@@ -2,6 +2,7 @@
 
 ## Commands
 
+- **Single-command full update (enrich, sync tracked corpus & README, rebuild `output/`):** `PYTHONPATH=src python3 -m reading_list.cli update`
 - **Run unit & smoke tests:** `PYTHONPATH=src python3 -m unittest discover -s tests -v`
 - **Quickly classify text/abstracts on the fly:** `PYTHONPATH=src python3 -m reading_list.cli classify --title "..." --text "..."`
 - **Add & classify a new article/paper/note:** `PYTHONPATH=src python3 -m reading_list.cli add --title "..." --type academic_paper --url "..." --text "..." --cites arxiv-2610.08739v2 --priority high`

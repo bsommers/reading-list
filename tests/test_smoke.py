@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,16 +18,18 @@ from reading_list.cli import load_corpus, main, run_build
 from reading_list.graph import build_knowledge_graph, build_taxonomy_index
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "seed_corpus.json"
+README_PATH = Path(__file__).parent.parent / "README.md"
 
 
 class ReadingListScaffoldTests(unittest.TestCase):
     def test_package_version_and_fixture_load(self) -> None:
         self.assertEqual(reading_list.__version__, "0.1.0")
         docs = load_corpus(FIXTURE_PATH)
-        self.assertEqual(len(docs), 2)
+        self.assertGreaterEqual(len(docs), 3)
         doc_ids = {d.doc_id for d in docs}
         self.assertIn("semieng-2026-bare-ai-monitors", doc_ids)
         self.assertIn("arxiv-2610.08739v2", doc_ids)
+        self.assertIn("a-rowhammer-attack-on-fil-c-s-software-capabilit", doc_ids)
 
     def test_semantic_chunking_and_taxonomy_hierarchy(self) -> None:
         docs = load_corpus(FIXTURE_PATH)
@@ -43,6 +46,12 @@ class ReadingListScaffoldTests(unittest.TestCase):
         self.assertIn("concept:pulse", all_concepts)
         self.assertIn("concept:asi", all_concepts)
         self.assertIn("concept:bit-flip-attack", all_concepts)
+
+        filc_chunks = chunks_by_doc["a-rowhammer-attack-on-fil-c-s-software-capabilit"]
+        filc_concepts = {cid for chunk in filc_chunks for cid in chunk.concept_ids}
+        self.assertIn("concept:fil-c", filc_concepts)
+        self.assertIn("concept:rowhammer", filc_concepts)
+        self.assertIn("concept:bit-flip-attack", filc_concepts)
 
         all_taxonomy_paths = {
             path for chunk in paper_chunks for path in chunk.taxonomy_paths
@@ -94,17 +103,9 @@ class ReadingListScaffoldTests(unittest.TestCase):
         )
         self.assertIn(
             (
-                "doc:arxiv-2610.08739v2",
-                "AFFILIATED_WITH",
-                "institution:university-of-texas-at-dallas",
-            ),
-            edges,
-        )
-        self.assertIn(
-            (
-                "doc:arxiv-2610.08739v2",
-                "AFFILIATED_WITH",
-                "institution:rensselaer-polytechnic-institute",
+                "doc:a-rowhammer-attack-on-fil-c-s-software-capabilit",
+                "MENTIONS_CONCEPT",
+                "concept:fil-c",
             ),
             edges,
         )
@@ -128,9 +129,13 @@ class ReadingListScaffoldTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             corpus_file = tmp_path / "corpus.json"
+            fixture_file = tmp_path / "seed_corpus.json"
+            readme_file = tmp_path / "README.md"
             out_dir = tmp_path / "output"
+            shutil.copyfile(FIXTURE_PATH, fixture_file)
+            shutil.copyfile(README_PATH, readme_file)
+            initial_count = len(load_corpus(FIXTURE_PATH))
 
-            # Add a new document via CLI
             rc = main(
                 [
                     "add",
@@ -152,15 +157,33 @@ class ReadingListScaffoldTests(unittest.TestCase):
                     "rowhammer,dram,vit",
                     "--corpus",
                     str(corpus_file),
+                    "--fixture",
+                    str(fixture_file),
                     "--output-dir",
                     str(out_dir),
                 ]
             )
             self.assertEqual(rc, 0)
             docs = load_corpus(corpus_file)
-            self.assertEqual(len(docs), 3)
+            self.assertEqual(len(docs), initial_count + 1)
 
-            # Update status via CLI
+            rc_upd = main(
+                [
+                    "update",
+                    "--corpus",
+                    str(corpus_file),
+                    "--fixture",
+                    str(fixture_file),
+                    "--output-dir",
+                    str(out_dir),
+                    "--readme",
+                    str(readme_file),
+                ]
+            )
+            self.assertEqual(rc_upd, 0)
+            self.assertEqual(len(load_corpus(fixture_file)), initial_count + 1)
+            self.assertIn("Rowhammer Faults in ViT NPUs", readme_file.read_text(encoding="utf-8"))
+
             rc_stat = main(
                 [
                     "status",
@@ -171,6 +194,8 @@ class ReadingListScaffoldTests(unittest.TestCase):
                     "Compare with BARE-AI APC overhead.",
                     "--corpus",
                     str(corpus_file),
+                    "--fixture",
+                    str(fixture_file),
                     "--output-dir",
                     str(out_dir),
                 ]

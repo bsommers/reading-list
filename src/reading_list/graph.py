@@ -281,7 +281,7 @@ def render_summary_markdown(
     word_cloud: dict[str, Any],
     kg: KnowledgeGraph,
 ) -> str:
-    """Render a Markdown report with document index, word cloud, and Mermaid graph."""
+    """Render a Markdown report with document index, word cloud, and dynamic Mermaid graph."""
     lines: list[str] = [
         "# Reading List Knowledge Graph & Taxonomy Index",
         "",
@@ -302,23 +302,47 @@ def render_summary_markdown(
             f"| `{doc.doc_id}` | `{doc.reading_status}` | `{doc.priority}` | `{doc.doc_type}` | {title_cell} | {doc.published_date} | {rels} |"
         )
 
-    lines.extend(
+    mermaid_lines: list[str] = [
+        "",
+        "## 2. Conceptual Taxonomy & Document Graph",
+        "",
+        "```mermaid",
+        "flowchart TD",
+    ]
+    tax_ids: dict[str, str] = {}
+    for idx, node in enumerate(TAXONOMY_NODES):
+        tid = f"TAX{idx}"
+        tax_ids[node.path] = tid
+        mermaid_lines.append(f'    {tid}["{node.label}"]')
+    for node in TAXONOMY_NODES:
+        if node.parent_path and node.parent_path in tax_ids:
+            mermaid_lines.append(f"    {tax_ids[node.parent_path]} --> {tax_ids[node.path]}")
+
+    doc_node_ids = {doc.doc_id: f"DOC{i}" for i, doc in enumerate(documents)}
+    for doc in documents:
+        d_var = doc_node_ids[doc.doc_id]
+        mermaid_lines.append(f'    {d_var}["{doc.doc_id}"]')
+        for rel in doc.relations:
+            if rel.target_doc_id in doc_node_ids:
+                mermaid_lines.append(
+                    f"    {d_var} -->|{rel.relation_type}| {doc_node_ids[rel.target_doc_id]}"
+                )
+        # Connect document to its leaf taxonomy categories
+        doc_paths = {
+            path
+            for chunk in chunks_by_doc.get(doc.doc_id, [])
+            for path in chunk.taxonomy_paths
+        }
+        parent_paths = {
+            n.parent_path for n in TAXONOMY_NODES if n.path in doc_paths and n.parent_path
+        }
+        leaf_paths = sorted(doc_paths - parent_paths)
+        for lp in leaf_paths:
+            if lp in tax_ids:
+                mermaid_lines.append(f"    {d_var} -->|IN_CATEGORY| {tax_ids[lp]}")
+
+    mermaid_lines.extend(
         [
-            "",
-            "## 2. Conceptual Taxonomy & Technology Areas",
-            "",
-            "```mermaid",
-            "flowchart TD",
-            '    HW["Hardware & Semiconductor Systems"] --> AIA["AI Accelerators"]',
-            '    AIA --> BPM["Built-in Performance Monitors (APCs, PULSE)"]',
-            '    SEC["Security & Resilience"] --> BFA["Hardware Fault Attacks > Bit-Flip Attacks"]',
-            '    SEC --> RFL["Runtime Fault Localization & Recovery (ASI)"]',
-            '    AIML["AI & Machine Learning"] --> DNN["Deep Neural Networks (CNNs, ViTs, LLMs)"]',
-            '    ART["Article: semieng-2026-bare-ai-monitors"] -->|REPORTS_ON| PAP["Paper: arxiv-2610.08739v2 (BARE-AI)"]',
-            "    PAP -->|IN_CATEGORY| BPM",
-            "    PAP -->|IN_CATEGORY| BFA",
-            "    PAP -->|IN_CATEGORY| RFL",
-            "    PAP -->|IN_CATEGORY| DNN",
             "```",
             "",
             "## 3. Global Word Cloud (Top 15 Terms)",
@@ -327,6 +351,7 @@ def render_summary_markdown(
             "|---|---|---|",
         ]
     )
+    lines.extend(mermaid_lines)
 
     for item in word_cloud.get("global_word_cloud", [])[:15]:
         lines.append(f"| `{item['term']}` | {item['count']} | {item['weight']:.2f} |")
