@@ -165,18 +165,23 @@ def render_github_pages_html(
       gap: 0.4rem;
       font-size: 0.82rem;
       font-weight: 600;
-      padding: 0.5rem 0.85rem;
+      padding: 0.46rem 0.82rem;
       border-radius: 9px;
       border: 1px solid var(--border);
       background: var(--bg-card);
       color: var(--text);
       cursor: pointer;
       transition: all 0.15s ease;
+      user-select: none;
     }}
     .btn:hover {{
       border-color: var(--accent);
       transform: translateY(-1px);
       text-decoration: none;
+    }}
+    .btn-sm {{
+      padding: 0.28rem 0.6rem;
+      font-size: 0.75rem;
     }}
     .btn-primary {{
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -235,8 +240,9 @@ def render_github_pages_html(
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
       gap: 0.75rem;
-      margin-bottom: 0.9rem;
+      margin-bottom: 0.85rem;
     }}
     .panel-title {{
       margin: 0;
@@ -253,11 +259,12 @@ def render_github_pages_html(
     #graph-container {{
       position: relative;
       width: 100%;
-      height: 410px;
+      height: 430px;
       border-radius: 10px;
       background: rgba(2, 6, 23, 0.35);
       border: 1px solid var(--border);
       overflow: hidden;
+      touch-action: none;
     }}
     [data-theme="light"] #graph-container {{
       background: #f1f5f9;
@@ -266,14 +273,45 @@ def render_github_pages_html(
       width: 100%;
       height: 100%;
       cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
     }}
-    #kg-svg:active {{
+    #kg-svg.dragging-canvas, #kg-svg.dragging-node {{
       cursor: grabbing;
+    }}
+    .graph-toolbar {{
+      position: absolute;
+      top: 0.65rem;
+      right: 0.65rem;
+      display: flex;
+      gap: 0.35rem;
+      z-index: 4;
+    }}
+    .graph-status-banner {{
+      position: absolute;
+      left: 0.65rem;
+      bottom: 0.65rem;
+      right: 0.65rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      background: var(--bg-elevated);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-strong);
+      font-size: 0.78rem;
+      z-index: 4;
+      pointer-events: auto;
+    }}
+    .graph-status-banner[hidden] {{
+      display: none !important;
     }}
     .graph-legend {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.65rem;
+      gap: 0.5rem;
       margin-top: 0.75rem;
       font-size: 0.76rem;
       color: var(--text-muted);
@@ -281,11 +319,22 @@ def render_github_pages_html(
     .legend-item {{
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.38rem;
       cursor: pointer;
-      padding: 0.2rem 0.5rem;
+      padding: 0.25rem 0.6rem;
       border-radius: 6px;
       border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      user-select: none;
+      transition: all 0.15s ease;
+    }}
+    .legend-item:hover {{
+      border-color: var(--accent);
+    }}
+    .legend-item.muted {{
+      opacity: 0.38;
+      text-decoration: line-through;
     }}
     .legend-dot {{
       width: 9px;
@@ -315,6 +364,7 @@ def render_github_pages_html(
       border-radius: 6px;
       transition: all 0.15s ease;
       border: 1px solid transparent;
+      user-select: none;
     }}
     .wc-term:hover, .wc-term.active {{
       border-color: var(--accent);
@@ -325,7 +375,7 @@ def render_github_pages_html(
       display: flex;
       flex-direction: column;
       gap: 0.45rem;
-      max-height: 210px;
+      max-height: 220px;
       overflow-y: auto;
       padding-right: 0.25rem;
     }}
@@ -340,6 +390,7 @@ def render_github_pages_html(
       font-size: 0.8rem;
       cursor: pointer;
       transition: border-color 0.15s ease;
+      user-select: none;
     }}
     .tax-item:hover, .tax-item.active {{
       border-color: var(--accent);
@@ -374,6 +425,29 @@ def render_github_pages_html(
     .filter-bar input {{
       flex: 1;
       min-width: 220px;
+    }}
+    .active-filters-row {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }}
+    .active-filters-row[hidden] {{
+      display: none !important;
+    }}
+    .filter-pill {{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: var(--bg-chip);
+      border: 1px solid var(--border-strong);
+      color: var(--accent);
+      cursor: pointer;
     }}
     .doc-grid {{
       display: grid;
@@ -443,6 +517,10 @@ def render_github_pages_html(
       background: var(--bg-chip);
       color: var(--accent);
       border: 1px solid rgba(56, 189, 248, 0.22);
+      cursor: pointer;
+    }}
+    .chip:hover {{
+      border-color: var(--accent);
     }}
     .chip-concept {{
       color: var(--accent-2);
@@ -524,12 +602,24 @@ def render_github_pages_html(
         <div class="panel-header">
           <div>
             <h2 class="panel-title">Interactive Knowledge Graph</h2>
-            <div class="panel-subtitle">Click any node to filter related documents &bull; Drag nodes to rearrange</div>
+            <div class="panel-subtitle">Click any node to filter related documents &bull; Drag nodes to rearrange &bull; Drag canvas or use +/- to pan/zoom</div>
           </div>
-          <button class="btn" id="reset-graph-btn" type="button">Reset Filter</button>
+          <div style="display:flex; gap:0.4rem;">
+            <button class="btn btn-sm" id="relayout-graph-btn" type="button">Re-Layout</button>
+            <button class="btn btn-sm" id="reset-graph-btn" type="button">Reset Filter</button>
+          </div>
         </div>
         <div id="graph-container">
-          <svg id="kg-svg" viewBox="0 0 820 410" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="graph-toolbar">
+            <button class="btn btn-sm" id="zoom-in-btn" type="button" title="Zoom In">+</button>
+            <button class="btn btn-sm" id="zoom-out-btn" type="button" title="Zoom Out">&minus;</button>
+            <button class="btn btn-sm" id="zoom-fit-btn" type="button" title="Reset View">Fit</button>
+          </div>
+          <svg id="kg-svg" viewBox="0 0 820 430" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="graph-status-banner" id="graph-status-banner" hidden>
+            <span id="graph-status-text"></span>
+            <button class="btn btn-sm" id="graph-status-clear" type="button">&times; Clear</button>
+          </div>
         </div>
         <div class="graph-legend" id="graph-legend"></div>
       </div>
@@ -571,8 +661,10 @@ def render_github_pages_html(
       <select id="tech-filter">
         <option value="">All Technology Areas</option>
       </select>
-      <button class="btn" id="clear-filters" type="button">Clear</button>
+      <button class="btn" id="clear-filters" type="button">Clear All</button>
     </section>
+
+    <div class="active-filters-row" id="active-filters-row" hidden></div>
 
     <section class="doc-grid" id="doc-grid"></section>
   </div>
@@ -609,8 +701,41 @@ def render_github_pages_html(
       techArea: "",
       taxonomyPath: "",
       conceptId: "",
-      docId: ""
+      docId: "",
+      selectedGraphNodeId: "",
+      hiddenNodeTypes: new Set()
     }};
+
+    let graphNodes = [];
+    let graphEdges = [];
+    let viewBox = {{ x: 0, y: 0, w: 820, h: 430 }};
+
+    function escapeHtml(str) {{
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }}
+
+    function getFilteredDocuments() {{
+      return DB.documents.filter(doc => {{
+        if (state.docId && doc.doc_id !== state.docId) return false;
+        if (state.status && doc.reading_status !== state.status) return false;
+        if (state.priority && doc.priority !== state.priority) return false;
+        if (state.docType && doc.doc_type !== state.docType) return false;
+        if (state.techArea && !doc.technology_areas.includes(state.techArea)) return false;
+        if (state.taxonomyPath && !doc.taxonomy_paths.includes(state.taxonomyPath)) return false;
+        if (state.conceptId && !doc.concept_ids.includes(state.conceptId)) return false;
+        if (state.query) {{
+          const q = state.query.toLowerCase();
+          const hay = `${{doc.title}} ${{doc.content}} ${{doc.authors.join(" ")}} ${{doc.tags.join(" ")}} ${{doc.notes}}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }}
+        return true;
+      }});
+    }}
 
     function initKPIs() {{
       const kpiGrid = document.getElementById("kpi-grid");
@@ -649,7 +774,7 @@ def render_github_pages_html(
       box.innerHTML = DB.word_cloud.slice(0, 26).map(item => {{
         const size = (0.76 + item.weight * 0.68).toFixed(2);
         const active = state.query.toLowerCase() === item.term.toLowerCase() ? "active" : "";
-        return `<span class="wc-term ${{active}}" style="font-size:${{size}}rem" data-term="${{item.term}}" title="Frequency: ${{item.count}}">${{item.term}}</span>`;
+        return `<span class="wc-term ${{active}}" style="font-size:${{size}}rem" data-term="${{escapeHtml(item.term)}}" title="Frequency: ${{item.count}}">${{escapeHtml(item.term)}}</span>`;
       }}).join("");
       box.querySelectorAll(".wc-term").forEach(el => {{
         el.addEventListener("click", () => {{
@@ -668,10 +793,10 @@ def render_github_pages_html(
         const depth = (cat.path.match(/>/g) || []).length;
         const indent = depth * 12;
         return `
-          <div class="tax-item ${{active}}" style="margin-left:${{indent}}px" data-path="${{cat.path}}">
+          <div class="tax-item ${{active}}" style="margin-left:${{indent}}px" data-path="${{escapeHtml(cat.path)}}">
             <div>
-              <div style="font-weight:600">${{cat.label}}</div>
-              <div class="tax-uri">${{cat.ontologic_class_uri}} &bull; ${{cat.technology_area}}</div>
+              <div style="font-weight:600">${{escapeHtml(cat.label)}}</div>
+              <div class="tax-uri">${{escapeHtml(cat.ontologic_class_uri)}} &bull; ${{escapeHtml(cat.technology_area)}}</div>
             </div>
             <span class="badge">${{cat.document_ids.length}} docs</span>
           </div>
@@ -681,31 +806,67 @@ def render_github_pages_html(
         el.addEventListener("click", () => {{
           const p = el.dataset.path;
           state.taxonomyPath = state.taxonomyPath === p ? "" : p;
+          if (!state.taxonomyPath && state.selectedGraphNodeId.startsWith("taxonomy:")) {{
+            state.selectedGraphNodeId = "";
+          }}
           refreshAll();
         }});
       }});
     }}
 
+    function renderActiveFilterPills(filteredDocs) {{
+      const row = document.getElementById("active-filters-row");
+      const pills = [];
+      if (state.docId) pills.push({{ key: "docId", label: `Document: ${{state.docId}}` }});
+      if (state.conceptId) pills.push({{ key: "conceptId", label: `Concept: ${{state.conceptId.replace("concept:", "")}}` }});
+      if (state.taxonomyPath) pills.push({{ key: "taxonomyPath", label: `Taxonomy: ${{state.taxonomyPath}}` }});
+      if (state.techArea) pills.push({{ key: "techArea", label: `Tech Area: ${{state.techArea}}` }});
+      if (state.status) pills.push({{ key: "status", label: `Status: ${{state.status}}` }});
+      if (state.priority) pills.push({{ key: "priority", label: `Priority: ${{state.priority}}` }});
+      if (state.docType) pills.push({{ key: "docType", label: `Type: ${{state.docType}}` }});
+      if (state.query) pills.push({{ key: "query", label: `Search: "${{state.query}}"` }});
+
+      if (!pills.length) {{
+        row.hidden = true;
+        row.innerHTML = "";
+      }} else {{
+        row.hidden = false;
+        row.innerHTML = `
+          <span style="font-size:0.78rem; color:var(--text-muted);">Showing ${{filteredDocs.length}} of ${{DB.documents.length}} documents:</span>
+          ${{pills.map(p => `<span class="filter-pill" data-key="${{p.key}}">${{escapeHtml(p.label)}} &times;</span>`).join("")}}
+        `;
+        row.querySelectorAll(".filter-pill").forEach(el => {{
+          el.addEventListener("click", () => {{
+            const k = el.dataset.key;
+            state[k] = "";
+            state.selectedGraphNodeId = "";
+            if (k === "query") document.getElementById("search-input").value = "";
+            if (k === "status") document.getElementById("status-filter").value = "";
+            if (k === "priority") document.getElementById("priority-filter").value = "";
+            if (k === "docType") document.getElementById("type-filter").value = "";
+            if (k === "techArea") document.getElementById("tech-filter").value = "";
+            refreshAll();
+          }});
+        }});
+      }}
+
+      const banner = document.getElementById("graph-status-banner");
+      const bannerText = document.getElementById("graph-status-text");
+      if (pills.length) {{
+        banner.hidden = false;
+        bannerText.textContent = `${{pills.map(p => p.label).join(" • ")}} (${{filteredDocs.length}} matching docs)`;
+      }} else {{
+        banner.hidden = true;
+      }}
+    }}
+
     function renderDocuments() {{
       const grid = document.getElementById("doc-grid");
-      const filtered = DB.documents.filter(doc => {{
-        if (state.docId && doc.doc_id !== state.docId) return false;
-        if (state.status && doc.reading_status !== state.status) return false;
-        if (state.priority && doc.priority !== state.priority) return false;
-        if (state.docType && doc.doc_type !== state.docType) return false;
-        if (state.techArea && !doc.technology_areas.includes(state.techArea)) return false;
-        if (state.taxonomyPath && !doc.taxonomy_paths.includes(state.taxonomyPath)) return false;
-        if (state.conceptId && !doc.concept_ids.includes(state.conceptId)) return false;
-        if (state.query) {{
-          const q = state.query.toLowerCase();
-          const hay = `${{doc.title}} ${{doc.content}} ${{doc.authors.join(" ")}} ${{doc.tags.join(" ")}} ${{doc.notes}}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }}
-        return true;
-      }});
+      const filtered = getFilteredDocuments();
+      renderActiveFilterPills(filtered);
 
       if (!filtered.length) {{
-        grid.innerHTML = `<div class="panel" style="grid-column: 1 / -1; text-align:center; color: var(--text-muted);">No documents match the current filters.</div>`;
+        grid.innerHTML = `<div class="panel" style="grid-column: 1 / -1; text-align:center; color: var(--text-muted);">No documents match the current filters. Click "Reset Filter" or "Clear All".</div>`;
         return;
       }}
 
@@ -714,30 +875,30 @@ def render_github_pages_html(
         const prioClass = doc.priority === "high" ? "prio-high" : "";
         const authors = doc.authors.length ? doc.authors.join(", ") : "Staff / Research Note";
         const inst = doc.institutions.length ? ` &bull; ${{doc.institutions.join(", ")}}` : "";
-        const relBadges = doc.relations.map(r => `<span class="badge">${{r.relation_type}} &rarr; ${{r.target_doc_id}}</span>`).join("");
-        const techChips = doc.technology_areas.slice(0, 4).map(t => `<span class="chip">${{t}}</span>`).join("");
-        const conceptChips = doc.concept_ids.map(c => `<span class="chip chip-concept">${{c.replace("concept:", "")}}</span>`).join("");
+        const relBadges = doc.relations.map(r => `<span class="badge">${{escapeHtml(r.relation_type)}} &rarr; ${{escapeHtml(r.target_doc_id)}}</span>`).join("");
+        const techChips = doc.technology_areas.slice(0, 4).map(t => `<span class="chip doc-tech-chip" data-tech="${{escapeHtml(t)}}">${{escapeHtml(t)}}</span>`).join("");
+        const conceptChips = doc.concept_ids.map(c => `<span class="chip chip-concept doc-concept-chip" data-concept="${{escapeHtml(c)}}">${{escapeHtml(c.replace("concept:", ""))}}</span>`).join("");
         return `
           <article class="doc-card">
             <div>
               <div class="badge-row">
-                <span class="badge ${{statusClass}}">${{doc.reading_status}}</span>
-                <span class="badge ${{prioClass}}">priority: ${{doc.priority}}</span>
-                <span class="badge">${{doc.doc_type.replace("_", " ")}}</span>
-                ${{doc.published_date ? `<span class="badge">${{doc.published_date}}</span>` : ""}}
+                <span class="badge ${{statusClass}}">${{escapeHtml(doc.reading_status)}}</span>
+                <span class="badge ${{prioClass}}">priority: ${{escapeHtml(doc.priority)}}</span>
+                <span class="badge">${{escapeHtml(doc.doc_type.replace("_", " "))}}</span>
+                ${{doc.published_date ? `<span class="badge">${{escapeHtml(doc.published_date)}}</span>` : ""}}
               </div>
               <h3 class="doc-title">
-                ${{doc.url ? `<a href="${{doc.url}}" target="_blank" rel="noopener">${{doc.title}}</a>` : doc.title}}
+                ${{doc.url ? `<a href="${{escapeHtml(doc.url)}}" target="_blank" rel="noopener">${{escapeHtml(doc.title)}}</a>` : escapeHtml(doc.title)}}
               </h3>
-              <div class="doc-meta">${{authors}}${{inst}}</div>
-              ${{doc.notes ? `<p style="font-size:0.82rem; color: var(--text-muted); margin: 0.5rem 0 0;"><strong>Notes:</strong> ${{doc.notes}}</p>` : ""}}
+              <div class="doc-meta">${{escapeHtml(authors)}}${{inst}}</div>
+              ${{doc.notes ? `<p style="font-size:0.82rem; color: var(--text-muted); margin: 0.5rem 0 0;"><strong>Notes:</strong> ${{escapeHtml(doc.notes)}}</p>` : ""}}
             </div>
             <div>
               <div class="chip-list" style="margin-bottom:0.45rem;">${{techChips}}</div>
               <div class="chip-list" style="margin-bottom:0.65rem;">${{conceptChips}}</div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                 <div class="badge-row">${{relBadges}}</div>
-                <button class="btn inspect-btn" data-doc="${{doc.doc_id}}" type="button">
+                <button class="btn inspect-btn" data-doc="${{escapeHtml(doc.doc_id)}}" type="button">
                   Inspect ${{doc.chunks.length}} Semantic Chunks
                 </button>
               </div>
@@ -748,6 +909,22 @@ def render_github_pages_html(
 
       grid.querySelectorAll(".inspect-btn").forEach(btn => {{
         btn.addEventListener("click", () => openChunkModal(btn.dataset.doc));
+      }});
+      grid.querySelectorAll(".doc-tech-chip").forEach(chip => {{
+        chip.addEventListener("click", () => {{
+          const t = chip.dataset.tech;
+          state.techArea = state.techArea === t ? "" : t;
+          document.getElementById("tech-filter").value = state.techArea;
+          refreshAll();
+        }});
+      }});
+      grid.querySelectorAll(".doc-concept-chip").forEach(chip => {{
+        chip.addEventListener("click", () => {{
+          const c = chip.dataset.concept;
+          state.conceptId = state.conceptId === c ? "" : c;
+          state.selectedGraphNodeId = state.conceptId;
+          refreshAll();
+        }});
       }});
     }}
 
@@ -760,119 +937,362 @@ def render_github_pages_html(
       body.innerHTML = doc.chunks.map(ch => `
         <div class="chunk-box">
           <div class="chunk-head">
-            <span>${{ch.chunk_id}} &mdash; ${{ch.heading}}</span>
+            <span>${{escapeHtml(ch.chunk_id)}} &mdash; ${{escapeHtml(ch.heading)}}</span>
             <span>${{ch.token_count}} words</span>
           </div>
-          <p style="margin: 0 0 0.65rem; font-size: 0.9rem;">${{ch.text}}</p>
+          <p style="margin: 0 0 0.65rem; font-size: 0.9rem;">${{escapeHtml(ch.text)}}</p>
           <div class="chip-list" style="margin-bottom: 0.35rem;">
-            ${{ch.concept_ids.map(c => `<span class="chip chip-concept">${{c}}</span>`).join("")}}
+            ${{ch.concept_ids.map(c => `<span class="chip chip-concept">${{escapeHtml(c)}}</span>`).join("")}}
           </div>
           <div class="chip-list">
-            ${{ch.taxonomy_paths.map(p => `<span class="chip">${{p}}</span>`).join("")}}
+            ${{ch.taxonomy_paths.map(p => `<span class="chip">${{escapeHtml(p)}}</span>`).join("")}}
           </div>
         </div>
       `).join("");
       document.getElementById("chunk-modal").showModal();
     }}
 
-    function renderGraph() {{
-      const svg = document.getElementById("kg-svg");
+    function computeGraphLayout() {{
       const allowedTypes = new Set(["Document", "Concept", "TaxonomyCategory", "TechnologyArea"]);
-      const nodes = DB.knowledge_graph.nodes
-        .filter(n => allowedTypes.has(n.node_type))
-        .map((n, i, arr) => {{
-          const angle = (2 * Math.PI * i) / arr.length;
-          const radius = n.node_type === "Document" ? 85 : (n.node_type === "Concept" ? 145 : 175);
-          return {{
-            ...n,
-            x: 410 + Math.cos(angle) * radius * 1.45,
-            y: 205 + Math.sin(angle) * radius * 0.92
-          }};
-        }});
-      const nodeById = Object.fromEntries(nodes.map(n => [n.node_id, n]));
-      const edges = DB.knowledge_graph.edges.filter(e => nodeById[e.source] && nodeById[e.target]);
+      const rawNodes = DB.knowledge_graph.nodes.filter(n => allowedTypes.has(n.node_type));
 
-      // Simple relaxation pass for clean node separation
-      for (let iter = 0; iter < 55; iter++) {{
-        for (let i = 0; i < nodes.length; i++) {{
-          for (let j = i + 1; j < nodes.length; j++) {{
-            const dx = nodes[j].x - nodes[i].x;
-            const dy = nodes[j].y - nodes[i].y;
-            const dist = Math.hypot(dx, dy) || 1;
-            if (dist < 68) {{
-              const push = (68 - dist) * 0.16;
+      const byType = {{
+        Document: [],
+        Concept: [],
+        TaxonomyCategory: [],
+        TechnologyArea: []
+      }};
+      rawNodes.forEach(n => {{
+        if (byType[n.node_type]) byType[n.node_type].push(n);
+      }});
+
+      graphNodes = [];
+      const ringConfig = [
+        {{ type: "Document", rx: 115, ry: 72, offset: 0.15 }},
+        {{ type: "Concept", rx: 225, ry: 125, offset: 0.55 }},
+        {{ type: "TaxonomyCategory", rx: 315, ry: 165, offset: 0.95 }},
+        {{ type: "TechnologyArea", rx: 365, ry: 188, offset: 1.35 }}
+      ];
+
+      ringConfig.forEach(cfg => {{
+        const list = byType[cfg.type] || [];
+        list.forEach((n, idx) => {{
+          const angle = cfg.offset + (2 * Math.PI * idx) / Math.max(1, list.length);
+          graphNodes.push({{
+            ...n,
+            x: 410 + Math.cos(angle) * cfg.rx,
+            y: 215 + Math.sin(angle) * cfg.ry
+          }});
+        }});
+      }});
+
+      const nodeById = Object.fromEntries(graphNodes.map(n => [n.node_id, n]));
+      graphEdges = DB.knowledge_graph.edges.filter(e => nodeById[e.source] && nodeById[e.target]);
+
+      // Force-directed repulsion + spring relaxation
+      for (let iter = 0; iter < 80; iter++) {{
+        for (let i = 0; i < graphNodes.length; i++) {{
+          for (let j = i + 1; j < graphNodes.length; j++) {{
+            const dx = graphNodes[j].x - graphNodes[i].x;
+            const dy = graphNodes[j].y - graphNodes[i].y;
+            const dist = Math.hypot(dx, dy) || 0.1;
+            const minDist = 66;
+            if (dist < minDist) {{
+              const push = (minDist - dist) * 0.22;
               const ux = (dx / dist) * push;
               const uy = (dy / dist) * push;
-              nodes[j].x += ux;
-              nodes[j].y += uy;
-              nodes[i].x -= ux;
-              nodes[i].y -= uy;
+              graphNodes[j].x += ux;
+              graphNodes[j].y += uy;
+              graphNodes[i].x -= ux;
+              graphNodes[i].y -= uy;
             }}
           }}
         }}
-        nodes.forEach(n => {{
-          n.x = Math.max(55, Math.min(765, n.x));
-          n.y = Math.max(32, Math.min(378, n.y));
+        graphNodes.forEach(n => {{
+          n.x = Math.max(48, Math.min(755, n.x));
+          n.y = Math.max(30, Math.min(395, n.y));
         }});
       }}
+    }}
 
-      function draw() {{
-        const edgeMarkup = edges.map(e => {{
-          const s = nodeById[e.source];
-          const t = nodeById[e.target];
-          return `<line x1="${{s.x}}" y1="${{s.y}}" x2="${{t.x}}" y2="${{t.y}}" stroke="rgba(148,163,184,0.26)" stroke-width="1.2" />`;
-        }}).join("");
+    function isNodeActiveFilter(node) {{
+      if (state.selectedGraphNodeId === node.node_id) return true;
+      if (node.node_type === "Document" && state.docId && node.node_id === `doc:${{state.docId}}`) return true;
+      if (node.node_type === "Concept" && state.conceptId === node.node_id) return true;
+      if (node.node_type === "TechnologyArea" && state.techArea === node.label) return true;
+      if (node.node_type === "TaxonomyCategory" && state.taxonomyPath && node.properties && node.properties.path === state.taxonomyPath) return true;
+      return false;
+    }}
 
-        const nodeMarkup = nodes.map(n => {{
-          const color = NODE_COLORS[n.node_type] || "#38bdf8";
-          const r = n.node_type === "Document" ? 11 : 8;
-          const shortLabel = n.label.length > 26 ? n.label.slice(0, 24) + "…" : n.label;
-          return `
-            <g class="kg-node" data-id="${{n.node_id}}" data-type="${{n.node_type}}" data-label="${{n.label}}" transform="translate(${{n.x}},${{n.y}})" style="cursor:pointer">
-              <circle r="${{r}}" fill="${{color}}" stroke="#0f172a" stroke-width="2"></circle>
-              <text x="${{r + 5}}" y="4" fill="currentColor" font-size="10.5" font-family="var(--font-sans)">${{shortLabel}}</text>
-            </g>
-          `;
-        }}).join("");
+    function handleGraphNodeClick(node) {{
+      const alreadyActive = isNodeActiveFilter(node);
+      // Reset previous graph-driven filter keys before setting the new one
+      state.docId = "";
+      state.conceptId = "";
+      state.taxonomyPath = "";
+      state.techArea = "";
+      state.selectedGraphNodeId = "";
+      document.getElementById("tech-filter").value = "";
 
-        svg.innerHTML = edgeMarkup + nodeMarkup;
-
-        svg.querySelectorAll(".kg-node").forEach(g => {{
-          g.addEventListener("click", () => {{
-            const id = g.dataset.id;
-            const type = g.dataset.type;
-            const label = g.dataset.label;
-            if (type === "Document") {{
-              const rawDocId = id.replace("doc:", "");
-              state.docId = state.docId === rawDocId ? "" : rawDocId;
-            }} else if (type === "Concept") {{
-              state.conceptId = state.conceptId === id ? "" : id;
-            }} else if (type === "TechnologyArea") {{
-              state.techArea = state.techArea === label ? "" : label;
-              document.getElementById("tech-filter").value = state.techArea;
-            }} else if (type === "TaxonomyCategory") {{
-              const match = DB.taxonomy.find(t => t.label === label);
-              if (match) {{
-                state.taxonomyPath = state.taxonomyPath === match.path ? "" : match.path;
-              }}
-            }}
-            refreshAll();
-          }});
-        }});
+      if (!alreadyActive) {{
+        state.selectedGraphNodeId = node.node_id;
+        if (node.node_type === "Document") {{
+          state.docId = (node.properties && node.properties.doc_id) || node.node_id.replace("doc:", "");
+        }} else if (node.node_type === "Concept") {{
+          state.conceptId = node.node_id;
+        }} else if (node.node_type === "TechnologyArea") {{
+          state.techArea = node.label;
+          document.getElementById("tech-filter").value = state.techArea;
+        }} else if (node.node_type === "TaxonomyCategory") {{
+          state.taxonomyPath = (node.properties && node.properties.path) || "";
+          if (!state.taxonomyPath) {{
+            const match = DB.taxonomy.find(t => t.label === node.label);
+            if (match) state.taxonomyPath = match.path;
+          }}
+        }}
       }}
+      refreshAll();
+    }}
 
-      draw();
+    function drawGraph() {{
+      const svg = document.getElementById("kg-svg");
+      const visibleNodes = graphNodes.filter(n => !state.hiddenNodeTypes.has(n.node_type));
+      const nodeById = Object.fromEntries(visibleNodes.map(n => [n.node_id, n]));
+      const visibleEdges = graphEdges.filter(e => nodeById[e.source] && nodeById[e.target]);
 
+      // Determine active node(s) and their 1-hop neighbors for visual highlighting
+      const activeIds = new Set(visibleNodes.filter(isNodeActiveFilter).map(n => n.node_id));
+      const neighborIds = new Set(activeIds);
+      visibleEdges.forEach(e => {{
+        if (activeIds.has(e.source)) neighborIds.add(e.target);
+        if (activeIds.has(e.target)) neighborIds.add(e.source);
+      }});
+      const hasHighlight = activeIds.size > 0;
+
+      const edgeMarkup = visibleEdges.map((e, idx) => {{
+        const s = nodeById[e.source];
+        const t = nodeById[e.target];
+        const connected = activeIds.has(e.source) || activeIds.has(e.target);
+        const stroke = connected ? "var(--accent)" : "rgba(148,163,184,0.28)";
+        const width = connected ? "2.4" : "1.2";
+        const opacity = hasHighlight ? (connected ? "0.95" : "0.15") : "0.85";
+        return `<line class="kg-edge" data-idx="${{idx}}" data-source="${{escapeHtml(e.source)}}" data-target="${{escapeHtml(e.target)}}" x1="${{s.x}}" y1="${{s.y}}" x2="${{t.x}}" y2="${{t.y}}" stroke="${{stroke}}" stroke-width="${{width}}" opacity="${{opacity}}" />`;
+      }}).join("");
+
+      const nodeMarkup = visibleNodes.map(n => {{
+        const color = NODE_COLORS[n.node_type] || "#38bdf8";
+        const isSelected = activeIds.has(n.node_id);
+        const isNeighbor = neighborIds.has(n.node_id);
+        const r = n.node_type === "Document" ? 11.5 : 8.5;
+        const opacity = hasHighlight ? (isNeighbor ? "1" : "0.22") : "1";
+        const shortLabel = n.label.length > 26 ? n.label.slice(0, 24) + "…" : n.label;
+        const halo = isSelected
+          ? `<circle class="kg-halo" r="${{r + 6}}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="3 2"></circle>`
+          : "";
+        return `
+          <g class="kg-node" data-id="${{escapeHtml(n.node_id)}}" transform="translate(${{n.x}},${{n.y}})" opacity="${{opacity}}" style="cursor:grab">
+            <title>${{escapeHtml(n.node_type)}}: ${{escapeHtml(n.label)}} (click to filter, drag to move)</title>
+            ${{halo}}
+            <circle r="${{r}}" fill="${{color}}" stroke="${{isSelected ? "#ffffff" : "#0f172a"}}" stroke-width="${{isSelected ? "2.8" : "2"}}"></circle>
+            <text x="${{r + 5}}" y="4" fill="currentColor" font-size="${{isSelected ? "11.5" : "10.2"}}" font-weight="${{isSelected ? "700" : "500"}}" font-family="var(--font-sans)" pointer-events="none">${{escapeHtml(shortLabel)}}</text>
+          </g>
+        `;
+      }}).join("");
+
+      svg.innerHTML = `<g id="kg-viewport">${{edgeMarkup}}${{nodeMarkup}}</g>`;
+    }}
+
+    function renderGraphLegend() {{
       const legend = document.getElementById("graph-legend");
-      legend.innerHTML = ["Document", "Concept", "TaxonomyCategory", "TechnologyArea"].map(t => `
-        <span class="legend-item">
-          <span class="legend-dot" style="background:${{NODE_COLORS[t]}}"></span>
-          ${{t}}
-        </span>
-      `).join("");
+      const types = ["Document", "Concept", "TaxonomyCategory", "TechnologyArea"];
+      legend.innerHTML = types.map(t => {{
+        const muted = state.hiddenNodeTypes.has(t) ? "muted" : "";
+        const count = graphNodes.filter(n => n.node_type === t).length;
+        return `
+          <button type="button" class="legend-item ${{muted}}" data-type="${{t}}" title="Click to show/hide ${{t}} nodes">
+            <span class="legend-dot" style="background:${{NODE_COLORS[t]}}"></span>
+            ${{t}} (${{count}})
+          </button>
+        `;
+      }}).join("");
+
+      legend.querySelectorAll(".legend-item").forEach(btn => {{
+        btn.addEventListener("click", () => {{
+          const t = btn.dataset.type;
+          if (state.hiddenNodeTypes.has(t)) {{
+            state.hiddenNodeTypes.delete(t);
+          }} else {{
+            state.hiddenNodeTypes.add(t);
+          }}
+          renderGraphLegend();
+          drawGraph();
+        }});
+      }});
+    }}
+
+    function clientToSvgPoint(svg, clientX, clientY) {{
+      const pt = svg.createSVGPoint();
+      pt.x = clientX;
+      pt.y = clientY;
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return {{ x: clientX, y: clientY }};
+      return pt.matrixTransform(ctm.inverse());
+    }}
+
+    function updateViewBox() {{
+      const svg = document.getElementById("kg-svg");
+      svg.setAttribute("viewBox", `${{viewBox.x.toFixed(1)}} ${{viewBox.y.toFixed(1)}} ${{viewBox.w.toFixed(1)}} ${{viewBox.h.toFixed(1)}}`);
+    }}
+
+    function setupGraphInteractions() {{
+      const svg = document.getElementById("kg-svg");
+      let dragState = null;
+
+      svg.addEventListener("pointerdown", e => {{
+        const nodeGroup = e.target.closest(".kg-node");
+        if (nodeGroup) {{
+          const nodeId = nodeGroup.dataset.id;
+          const nodeObj = graphNodes.find(n => n.node_id === nodeId);
+          if (!nodeObj) return;
+          const startSvg = clientToSvgPoint(svg, e.clientX, e.clientY);
+          dragState = {{
+            mode: "node",
+            nodeObj,
+            nodeGroup,
+            startClientX: e.clientX,
+            startClientY: e.clientY,
+            offsetX: nodeObj.x - startSvg.x,
+            offsetY: nodeObj.y - startSvg.y,
+            moved: false
+          }};
+          svg.classList.add("dragging-node");
+          svg.setPointerCapture(e.pointerId);
+          e.preventDefault();
+        }} else {{
+          dragState = {{
+            mode: "pan",
+            startClientX: e.clientX,
+            startClientY: e.clientY,
+            startViewX: viewBox.x,
+            startViewY: viewBox.y,
+            moved: false
+          }};
+          svg.classList.add("dragging-canvas");
+          svg.setPointerCapture(e.pointerId);
+        }}
+      }});
+
+      svg.addEventListener("pointermove", e => {{
+        if (!dragState) return;
+        const distPx = Math.hypot(e.clientX - dragState.startClientX, e.clientY - dragState.startClientY);
+        if (distPx > 5) dragState.moved = true;
+
+        if (dragState.mode === "node") {{
+          const pt = clientToSvgPoint(svg, e.clientX, e.clientY);
+          const nx = pt.x + dragState.offsetX;
+          const ny = pt.y + dragState.offsetY;
+          dragState.nodeObj.x = nx;
+          dragState.nodeObj.y = ny;
+          dragState.nodeGroup.setAttribute("transform", `translate(${{nx}},${{ny}})`);
+
+          const id = dragState.nodeObj.node_id;
+          svg.querySelectorAll(".kg-edge").forEach(line => {{
+            if (line.dataset.source === id) {{
+              line.setAttribute("x1", nx);
+              line.setAttribute("y1", ny);
+            }}
+            if (line.dataset.target === id) {{
+              line.setAttribute("x2", nx);
+              line.setAttribute("y2", ny);
+            }}
+          }});
+        }} else if (dragState.mode === "pan" && dragState.moved) {{
+          const rect = svg.getBoundingClientRect();
+          const scaleX = viewBox.w / Math.max(1, rect.width);
+          const scaleY = viewBox.h / Math.max(1, rect.height);
+          viewBox.x = dragState.startViewX - (e.clientX - dragState.startClientX) * scaleX;
+          viewBox.y = dragState.startViewY - (e.clientY - dragState.startClientY) * scaleY;
+          updateViewBox();
+        }}
+      }});
+
+      function finishPointer(e) {{
+        if (!dragState) return;
+        const current = dragState;
+        dragState = null;
+        svg.classList.remove("dragging-node", "dragging-canvas");
+        try {{
+          if (e && e.pointerId != null && svg.hasPointerCapture(e.pointerId)) {{
+            svg.releasePointerCapture(e.pointerId);
+          }}
+        }} catch (_) {{}}
+
+        if (current.mode === "node" && !current.moved) {{
+          handleGraphNodeClick(current.nodeObj);
+        }}
+      }}
+
+      svg.addEventListener("pointerup", finishPointer);
+      svg.addEventListener("pointercancel", finishPointer);
+
+      svg.addEventListener("wheel", e => {{
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 0.88 : 1.14;
+        const newW = Math.max(260, Math.min(1800, viewBox.w * factor));
+        const newH = Math.max(136, Math.min(940, viewBox.h * factor));
+        viewBox.x += (viewBox.w - newW) * 0.5;
+        viewBox.y += (viewBox.h - newH) * 0.5;
+        viewBox.w = newW;
+        viewBox.h = newH;
+        updateViewBox();
+      }}, {{ passive: false }});
+
+      document.getElementById("zoom-in-btn").addEventListener("click", () => {{
+        viewBox.x += viewBox.w * 0.08;
+        viewBox.y += viewBox.h * 0.08;
+        viewBox.w *= 0.84;
+        viewBox.h *= 0.84;
+        updateViewBox();
+      }});
+      document.getElementById("zoom-out-btn").addEventListener("click", () => {{
+        viewBox.x -= viewBox.w * 0.09;
+        viewBox.y -= viewBox.h * 0.09;
+        viewBox.w *= 1.18;
+        viewBox.h *= 1.18;
+        updateViewBox();
+      }});
+      document.getElementById("zoom-fit-btn").addEventListener("click", () => {{
+        viewBox = {{ x: 0, y: 0, w: 820, h: 430 }};
+        updateViewBox();
+      }});
+      document.getElementById("relayout-graph-btn").addEventListener("click", () => {{
+        viewBox = {{ x: 0, y: 0, w: 820, h: 430 }};
+        updateViewBox();
+        computeGraphLayout();
+        drawGraph();
+      }});
+    }}
+
+    function clearAllFilters() {{
+      state.query = "";
+      state.status = "";
+      state.priority = "";
+      state.docType = "";
+      state.techArea = "";
+      state.taxonomyPath = "";
+      state.conceptId = "";
+      state.docId = "";
+      state.selectedGraphNodeId = "";
+      document.getElementById("search-input").value = "";
+      document.getElementById("status-filter").value = "";
+      document.getElementById("priority-filter").value = "";
+      document.getElementById("type-filter").value = "";
+      document.getElementById("tech-filter").value = "";
+      refreshAll();
     }}
 
     function refreshAll() {{
+      drawGraph();
       renderWordCloud();
       renderTaxonomy();
       renderDocuments();
@@ -898,23 +1318,9 @@ def render_github_pages_html(
       state.techArea = e.target.value;
       refreshAll();
     }});
-    document.getElementById("clear-filters").addEventListener("click", () => {{
-      Object.keys(state).forEach(k => state[k] = "");
-      document.getElementById("search-input").value = "";
-      document.getElementById("status-filter").value = "";
-      document.getElementById("priority-filter").value = "";
-      document.getElementById("type-filter").value = "";
-      document.getElementById("tech-filter").value = "";
-      refreshAll();
-    }});
-    document.getElementById("reset-graph-btn").addEventListener("click", () => {{
-      state.docId = "";
-      state.conceptId = "";
-      state.taxonomyPath = "";
-      state.techArea = "";
-      document.getElementById("tech-filter").value = "";
-      refreshAll();
-    }});
+    document.getElementById("clear-filters").addEventListener("click", clearAllFilters);
+    document.getElementById("reset-graph-btn").addEventListener("click", clearAllFilters);
+    document.getElementById("graph-status-clear").addEventListener("click", clearAllFilters);
     document.getElementById("close-modal").addEventListener("click", () => {{
       document.getElementById("chunk-modal").close();
     }});
@@ -925,7 +1331,9 @@ def render_github_pages_html(
 
     initKPIs();
     initTechDropdown();
-    renderGraph();
+    computeGraphLayout();
+    renderGraphLegend();
+    setupGraphInteractions();
     refreshAll();
   </script>
 </body>
