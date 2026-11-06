@@ -15,19 +15,21 @@ def render_github_pages_html(
     taxonomy_index: dict[str, Any],
     kg: KnowledgeGraph,
 ) -> str:
-    """Render a self-contained, interactive GitHub Pages HTML application (`index.html`)."""
+    """Render a self-contained, synoptic GitHub Pages HTML application (`index.html`) with hierarchical domain drill-down."""
     docs_payload = []
     for doc in documents:
         doc_chunks = [c.to_dict() for c in chunks_by_doc.get(doc.doc_id, [])]
         all_concepts = sorted({cid for c in doc_chunks for cid in c["concept_ids"]})
         all_tax = sorted({p for c in doc_chunks for p in c["taxonomy_paths"]})
         all_tech = sorted({t for c in doc_chunks for t in c["technology_areas"]})
+        top_domains = sorted({p.split(" > ")[0] for p in all_tax if p})
         docs_payload.append(
             {
                 **doc.to_dict(),
                 "chunks": doc_chunks,
                 "concept_ids": all_concepts,
                 "taxonomy_paths": all_tax,
+                "top_domains": top_domains,
                 "technology_areas": all_tech,
                 "word_cloud": word_cloud.get("by_document", {}).get(doc.doc_id, []),
             }
@@ -48,19 +50,19 @@ def render_github_pages_html(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reading DB — Semantic Knowledge Graph &amp; Conceptual Taxonomy</title>
-  <meta name="description" content="Interactive knowledge graph, semantic chunks, word cloud, and conceptual taxonomy for technical articles and academic papers." />
+  <title>Reading DB — Synoptic Knowledge Graph &amp; Domain Navigator</title>
+  <meta name="description" content="Synoptic domain navigator, interactive knowledge graph, semantic chunks, word cloud, and conceptual taxonomy for technical articles and academic papers." />
   <script type="application/ld+json">
 {jsonld_str}
   </script>
   <style>
     :root {{
       --bg: #0b0f19;
-      --bg-elevated: rgba(19, 27, 46, 0.78);
-      --bg-card: rgba(23, 33, 56, 0.85);
+      --bg-elevated: rgba(19, 27, 46, 0.82);
+      --bg-card: rgba(23, 33, 56, 0.88);
       --bg-chip: rgba(56, 189, 248, 0.12);
       --border: rgba(148, 163, 184, 0.18);
-      --border-strong: rgba(56, 189, 248, 0.45);
+      --border-strong: rgba(56, 189, 248, 0.48);
       --text: #f1f5f9;
       --text-muted: #94a3b8;
       --accent: #38bdf8;
@@ -68,14 +70,14 @@ def render_github_pages_html(
       --accent-3: #10b981;
       --accent-warn: #f59e0b;
       --accent-danger: #f43f5e;
-      --shadow: 0 18px 40px -15px rgba(2, 6, 23, 0.75);
-      --radius: 14px;
+      --shadow: 0 16px 36px -14px rgba(2, 6, 23, 0.75);
+      --radius: 13px;
       --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
     }}
     [data-theme="light"] {{
       --bg: #f8fafc;
-      --bg-elevated: rgba(255, 255, 255, 0.88);
+      --bg-elevated: rgba(255, 255, 255, 0.92);
       --bg-card: #ffffff;
       --bg-chip: rgba(2, 132, 199, 0.1);
       --border: rgba(15, 23, 42, 0.12);
@@ -85,7 +87,7 @@ def render_github_pages_html(
       --accent: #0284c7;
       --accent-2: #7c3aed;
       --accent-3: #059669;
-      --shadow: 0 12px 30px -10px rgba(15, 23, 42, 0.1);
+      --shadow: 0 10px 26px -10px rgba(15, 23, 42, 0.1);
     }}
     * {{
       box-sizing: border-box;
@@ -94,11 +96,11 @@ def render_github_pages_html(
       margin: 0;
       font-family: var(--font-sans);
       background:
-        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.12), transparent 35%),
-        radial-gradient(circle at 88% 12%, rgba(168, 85, 247, 0.12), transparent 38%),
+        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.11), transparent 35%),
+        radial-gradient(circle at 88% 12%, rgba(168, 85, 247, 0.11), transparent 38%),
         var(--bg);
       color: var(--text);
-      line-height: 1.55;
+      line-height: 1.5;
       min-height: 100vh;
     }}
     a {{
@@ -109,69 +111,69 @@ def render_github_pages_html(
       text-decoration: underline;
     }}
     .shell {{
-      max-width: 1400px;
+      max-width: 1420px;
       margin: 0 auto;
-      padding: 1.75rem 1.5rem 4rem;
+      padding: 1.25rem 1.4rem 3rem;
     }}
     header.hero {{
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 1.25rem;
-      padding: 1.5rem 1.75rem;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
       border-radius: var(--radius);
       background: var(--bg-elevated);
       backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }}
     .brand-eyebrow {{
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       font-family: var(--font-mono);
-      font-size: 0.76rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.09em;
+      letter-spacing: 0.08em;
       color: var(--accent);
       background: var(--bg-chip);
-      padding: 0.28rem 0.65rem;
+      padding: 0.2rem 0.6rem;
       border-radius: 999px;
       border: 1px solid var(--border-strong);
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.35rem;
     }}
     h1 {{
-      margin: 0 0 0.4rem;
-      font-size: clamp(1.55rem, 2.5vw, 2.15rem);
+      margin: 0 0 0.2rem;
+      font-size: clamp(1.35rem, 2.1vw, 1.8rem);
       letter-spacing: -0.02em;
     }}
     .subtitle {{
       margin: 0;
       color: var(--text-muted);
-      max-width: 760px;
-      font-size: 0.96rem;
+      max-width: 740px;
+      font-size: 0.88rem;
     }}
     .hero-actions {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.55rem;
+      gap: 0.45rem;
       align-items: center;
     }}
     .btn {{
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.82rem;
+      gap: 0.35rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      padding: 0.46rem 0.82rem;
-      border-radius: 9px;
+      padding: 0.42rem 0.75rem;
+      border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--bg-card);
       color: var(--text);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.14s ease;
       user-select: none;
     }}
     .btn:hover {{
@@ -179,9 +181,14 @@ def render_github_pages_html(
       transform: translateY(-1px);
       text-decoration: none;
     }}
+    .btn.active {{
+      border-color: var(--accent);
+      background: var(--bg-chip);
+      color: var(--accent);
+    }}
     .btn-sm {{
-      padding: 0.28rem 0.6rem;
-      font-size: 0.75rem;
+      padding: 0.26rem 0.58rem;
+      font-size: 0.73rem;
     }}
     .btn-primary {{
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -190,19 +197,22 @@ def render_github_pages_html(
     }}
     .kpi-grid {{
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-      gap: 0.9rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }}
     .kpi-card {{
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1rem 1.15rem;
+      padding: 0.75rem 1rem;
       box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
     }}
     .kpi-value {{
-      font-size: 1.75rem;
+      font-size: 1.45rem;
       font-weight: 800;
       font-family: var(--font-mono);
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -210,17 +220,163 @@ def render_github_pages_html(
       -webkit-text-fill-color: transparent;
     }}
     .kpi-label {{
-      font-size: 0.78rem;
+      font-size: 0.73rem;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-top: 0.2rem;
+      letter-spacing: 0.05em;
     }}
+
+    /* Synoptic Domain & Slice Navigator */
+    .navigator-panel {{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.1rem;
+    }}
+    .nav-top-bar {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }}
+    .slice-tabs {{
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      background: var(--bg);
+      padding: 0.25rem;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+    }}
+    .slice-tab {{
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.32rem 0.68rem;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }}
+    .slice-tab.active {{
+      background: var(--bg-card);
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }}
+    .breadcrumb-bar {{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      background: rgba(2, 6, 23, 0.28);
+      border: 1px solid var(--border);
+      margin-bottom: 0.85rem;
+    }}
+    [data-theme="light"] .breadcrumb-bar {{
+      background: #f1f5f9;
+    }}
+    .crumb {{
+      cursor: pointer;
+      color: var(--accent);
+      padding: 0.1rem 0.35rem;
+      border-radius: 5px;
+    }}
+    .crumb:hover {{
+      background: var(--bg-chip);
+    }}
+    .crumb.current {{
+      color: var(--text);
+      font-weight: 700;
+    }}
+    .crumb-sep {{
+      color: var(--text-muted);
+    }}
+    .domain-cards-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 0.75rem;
+    }}
+    .domain-card {{
+      background: rgba(2, 6, 23, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.8rem 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.55rem;
+    }}
+    [data-theme="light"] .domain-card {{
+      background: #f8fafc;
+    }}
+    .domain-card:hover {{
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }}
+    .domain-card.active {{
+      border-color: var(--accent);
+      background: var(--bg-chip);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }}
+    .domain-card-head {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }}
+    .domain-card-title {{
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin: 0;
+    }}
+    .domain-card-count {{
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 0.12rem 0.45rem;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      white-space: nowrap;
+    }}
+    .domain-sub-pills {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }}
+    .sub-pill {{
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      padding: 0.12rem 0.42rem;
+      border-radius: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+    }}
+    .sub-pill:hover, .sub-pill.active {{
+      border-color: var(--accent-2);
+      color: var(--accent-2);
+    }}
+
+    /* Main 2-column synoptic visual area */
     .dashboard-grid {{
       display: grid;
       grid-template-columns: 1.35fr 1fr;
-      gap: 1.25rem;
-      margin-bottom: 1.5rem;
+      gap: 1.1rem;
+      margin-bottom: 1.1rem;
     }}
     @media (max-width: 1024px) {{
       .dashboard-grid {{
@@ -231,7 +387,7 @@ def render_github_pages_html(
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem;
+      padding: 1.05rem 1.15rem;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
@@ -241,25 +397,25 @@ def render_github_pages_html(
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 0.75rem;
-      margin-bottom: 0.85rem;
+      gap: 0.6rem;
+      margin-bottom: 0.7rem;
     }}
     .panel-title {{
       margin: 0;
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
     }}
     .panel-subtitle {{
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
     }}
     #graph-container {{
       position: relative;
       width: 100%;
-      height: 430px;
+      height: 360px;
       border-radius: 10px;
       background: rgba(2, 6, 23, 0.35);
       border: 1px solid var(--border);
@@ -301,27 +457,27 @@ def render_github_pages_html(
     }}
     .graph-toolbar {{
       position: absolute;
-      top: 0.65rem;
-      right: 0.65rem;
+      top: 0.55rem;
+      right: 0.55rem;
       display: flex;
-      gap: 0.35rem;
+      gap: 0.3rem;
       z-index: 4;
     }}
     .graph-status-banner {{
       position: absolute;
-      left: 0.65rem;
-      bottom: 0.65rem;
-      right: 0.65rem;
+      left: 0.55rem;
+      bottom: 0.55rem;
+      right: 0.55rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.45rem 0.75rem;
+      padding: 0.4rem 0.7rem;
       border-radius: 8px;
       background: var(--bg-elevated);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border-strong);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       z-index: 4;
       pointer-events: auto;
     }}
@@ -331,23 +487,23 @@ def render_github_pages_html(
     .graph-legend {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      font-size: 0.76rem;
+      gap: 0.45rem;
+      margin-top: 0.65rem;
+      font-size: 0.74rem;
       color: var(--text-muted);
     }}
     .legend-item {{
       display: inline-flex;
       align-items: center;
-      gap: 0.38rem;
+      gap: 0.35rem;
       cursor: pointer;
-      padding: 0.25rem 0.6rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 6px;
       border: 1px solid var(--border);
       background: var(--bg-elevated);
       color: var(--text);
       user-select: none;
-      transition: all 0.15s ease;
+      transition: all 0.14s ease;
     }}
     .legend-item:hover {{
       border-color: var(--accent);
@@ -357,8 +513,8 @@ def render_github_pages_html(
       text-decoration: line-through;
     }}
     .legend-dot {{
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
     }}
     .word-cloud-box {{
@@ -366,13 +522,13 @@ def render_github_pages_html(
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 0.45rem 0.65rem;
-      padding: 0.9rem;
+      gap: 0.38rem 0.55rem;
+      padding: 0.75rem;
       border-radius: 10px;
       background: rgba(2, 6, 23, 0.25);
       border: 1px solid var(--border);
-      min-height: 185px;
-      margin-bottom: 1rem;
+      min-height: 145px;
+      margin-bottom: 0.75rem;
     }}
     [data-theme="light"] .word-cloud-box {{
       background: #f8fafc;
@@ -380,36 +536,36 @@ def render_github_pages_html(
     .wc-term {{
       cursor: pointer;
       font-family: var(--font-mono);
-      padding: 0.15rem 0.45rem;
+      padding: 0.12rem 0.4rem;
       border-radius: 6px;
-      transition: all 0.15s ease;
+      transition: all 0.14s ease;
       border: 1px solid transparent;
       user-select: none;
     }}
     .wc-term:hover, .wc-term.active {{
       border-color: var(--accent);
       background: var(--bg-chip);
-      transform: scale(1.06);
+      transform: scale(1.05);
     }}
     .taxonomy-list {{
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
-      max-height: 220px;
+      gap: 0.35rem;
+      max-height: 185px;
       overflow-y: auto;
-      padding-right: 0.25rem;
+      padding-right: 0.2rem;
     }}
     .tax-item {{
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.48rem 0.65rem;
-      border-radius: 8px;
+      padding: 0.38rem 0.6rem;
+      border-radius: 7px;
       border: 1px solid var(--border);
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       cursor: pointer;
-      transition: border-color 0.15s ease;
+      transition: border-color 0.14s ease;
       user-select: none;
     }}
     .tax-item:hover, .tax-item.active {{
@@ -418,40 +574,42 @@ def render_github_pages_html(
     }}
     .tax-uri {{
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.66rem;
       color: var(--accent-2);
     }}
+
+    /* Compact Filter & Synoptic Document Section */
     .filter-bar {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.65rem;
+      gap: 0.55rem;
       align-items: center;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 0.95rem 1.15rem;
+      padding: 0.75rem 1rem;
       border-radius: var(--radius);
-      margin-bottom: 1.2rem;
+      margin-bottom: 0.85rem;
       box-shadow: var(--shadow);
     }}
     .filter-bar input, .filter-bar select {{
       background: var(--bg);
       color: var(--text);
       border: 1px solid var(--border);
-      padding: 0.48rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      padding: 0.42rem 0.68rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
       font-family: var(--font-sans);
     }}
     .filter-bar input {{
       flex: 1;
-      min-width: 220px;
+      min-width: 200px;
     }}
     .active-filters-row {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.45rem;
+      gap: 0.4rem;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }}
     .active-filters-row[hidden] {{
       display: none !important;
@@ -459,20 +617,64 @@ def render_github_pages_html(
     .filter-pill {{
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.35rem;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.25rem 0.65rem;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.58rem;
       border-radius: 999px;
       background: var(--bg-chip);
       border: 1px solid var(--border-strong);
       color: var(--accent);
       cursor: pointer;
     }}
+
+    /* Synoptic Table View (Default to prevent page sprawl) */
+    .synoptic-table-wrap {{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }}
+    table.synoptic-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }}
+    table.synoptic-table th, table.synoptic-table td {{
+      padding: 0.68rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }}
+    table.synoptic-table th {{
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: rgba(2, 6, 23, 0.22);
+    }}
+    table.synoptic-table tr:last-child td {{
+      border-bottom: none;
+    }}
+    table.synoptic-table tbody tr:hover {{
+      background: rgba(56, 189, 248, 0.05);
+    }}
+    .pagination-bar {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }}
+
     .doc-grid {{
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      gap: 1.1rem;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 0.95rem;
     }}
     @media (max-width: 520px) {{
       .doc-grid {{
@@ -483,13 +685,13 @@ def render_github_pages_html(
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.2rem;
+      padding: 1rem 1.1rem;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 0.85rem;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      gap: 0.7rem;
+      transition: transform 0.14s ease, border-color 0.14s ease;
     }}
     .doc-card:hover {{
       transform: translateY(-2px);
@@ -498,42 +700,43 @@ def render_github_pages_html(
     .badge-row {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem;
+      gap: 0.35rem;
       align-items: center;
     }}
     .badge {{
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.66rem;
       font-weight: 600;
-      padding: 0.18rem 0.5rem;
-      border-radius: 6px;
+      padding: 0.14rem 0.45rem;
+      border-radius: 5px;
       border: 1px solid var(--border);
       text-transform: uppercase;
+      white-space: nowrap;
     }}
     .status-read {{ color: var(--accent-3); border-color: rgba(16, 185, 129, 0.4); }}
     .status-reading {{ color: var(--accent); border-color: rgba(56, 189, 248, 0.4); }}
     .status-to-read {{ color: var(--accent-warn); border-color: rgba(245, 158, 11, 0.4); }}
     .prio-high {{ color: var(--accent-danger); border-color: rgba(244, 63, 94, 0.4); }}
     .doc-title {{
-      margin: 0.25rem 0;
-      font-size: 1.05rem;
+      margin: 0.2rem 0;
+      font-size: 0.96rem;
       font-weight: 700;
       line-height: 1.35;
     }}
     .doc-meta {{
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
     }}
     .chip-list {{
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
+      gap: 0.3rem;
     }}
     .chip {{
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-family: var(--font-mono);
-      padding: 0.16rem 0.48rem;
-      border-radius: 6px;
+      padding: 0.13rem 0.42rem;
+      border-radius: 5px;
       background: var(--bg-chip);
       color: var(--accent);
       border: 1px solid rgba(56, 189, 248, 0.22);
@@ -562,7 +765,7 @@ def render_github_pages_html(
       backdrop-filter: blur(5px);
     }}
     .modal-head {{
-      padding: 1.15rem 1.4rem;
+      padding: 1rem 1.3rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
@@ -573,26 +776,26 @@ def render_github_pages_html(
       background: var(--bg-card);
     }}
     .modal-body {{
-      padding: 1.25rem 1.4rem;
+      padding: 1.15rem 1.3rem;
       overflow-y: auto;
       max-height: calc(86vh - 80px);
       display: flex;
       flex-direction: column;
-      gap: 0.9rem;
+      gap: 0.85rem;
     }}
     .chunk-box {{
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 0.95rem 1.1rem;
+      padding: 0.9rem 1.05rem;
       background: rgba(2, 6, 23, 0.22);
     }}
     .chunk-head {{
       display: flex;
       justify-content: space-between;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--accent);
-      margin-bottom: 0.45rem;
+      margin-bottom: 0.4rem;
     }}
   </style>
 </head>
@@ -601,33 +804,52 @@ def render_github_pages_html(
     <header class="hero">
       <div>
         <div class="brand-eyebrow">OntoLogic-Ready Knowledge Base &bull; reading-db</div>
-        <h1>Reading List Knowledge Graph &amp; Taxonomy</h1>
+        <h1>Synoptic Knowledge Graph &amp; Domain Navigator</h1>
         <p class="subtitle">
-          Semantically chunked technical articles, academic papers, and research notes linked across conceptual hierarchies, technology areas, and domain word clouds.
+          Top-level domain selector with hierarchical drill-downs into subdomains, technology slices, scoped knowledge graphs, and semantic chunks.
         </p>
       </div>
       <div class="hero-actions">
-        <a class="btn" href="knowledge_graph.json" target="_blank" rel="noopener">JSON-LD Graph</a>
-        <a class="btn" href="taxonomy_tree.json" target="_blank" rel="noopener">Taxonomy JSON</a>
-        <a class="btn" href="chunks.json" target="_blank" rel="noopener">Chunks JSON</a>
+        <a class="btn" href="knowledge_graph.json" target="_blank" rel="noopener">JSON-LD</a>
+        <a class="btn" href="taxonomy_tree.json" target="_blank" rel="noopener">Taxonomy</a>
+        <a class="btn" href="chunks.json" target="_blank" rel="noopener">Chunks</a>
         <a class="btn" href="summary.md" target="_blank" rel="noopener">Summary MD</a>
-        <button class="btn btn-primary" id="theme-toggle" type="button">Toggle Theme</button>
+        <button class="btn btn-primary" id="theme-toggle" type="button">Theme</button>
       </div>
     </header>
 
     <section class="kpi-grid" id="kpi-grid"></section>
 
+    <!-- Synoptic Top-Level Domain & Slice Selector with Breadcrumb Drill-Down -->
+    <section class="navigator-panel">
+      <div class="nav-top-bar">
+        <div>
+          <h2 class="panel-title">Top-Level Domain &amp; Slice Navigator</h2>
+          <div class="panel-subtitle">Select a top-level division and drill down into subcategories to scope the graph, word cloud, and document list</div>
+        </div>
+        <div class="slice-tabs" id="slice-dimension-tabs">
+          <button type="button" class="slice-tab active" data-dim="domain">By Domain Hierarchy</button>
+          <button type="button" class="slice-tab" data-dim="tech">By Technology Area</button>
+          <button type="button" class="slice-tab" data-dim="workflow">By Reading Stage</button>
+          <button type="button" class="slice-tab" data-dim="doctype">By Document Type</button>
+        </div>
+      </div>
+
+      <div class="breadcrumb-bar" id="breadcrumb-bar"></div>
+      <div class="domain-cards-grid" id="domain-cards-grid"></div>
+    </section>
+
     <section class="dashboard-grid">
       <div class="panel" id="graph-panel">
         <div class="panel-header">
           <div>
-            <h2 class="panel-title">Interactive Knowledge Graph</h2>
-            <div class="panel-subtitle">Click any node to filter related documents &bull; Drag nodes to rearrange &bull; Drag canvas or use +/- to pan/zoom</div>
+            <h2 class="panel-title">Scoped Knowledge Graph <span class="badge" id="graph-scope-badge">All Domains</span></h2>
+            <div class="panel-subtitle">Click any node to filter &bull; Drag nodes to rearrange &bull; Scoped to active domain/slice</div>
           </div>
-          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
             <button class="btn btn-sm" id="fullscreen-graph-btn" type="button" title="Toggle Full Web-Page View">&#x26F6; Full Page</button>
             <button class="btn btn-sm" id="relayout-graph-btn" type="button">Re-Layout</button>
-            <button class="btn btn-sm" id="reset-graph-btn" type="button">Reset Filter</button>
+            <button class="btn btn-sm" id="reset-graph-btn" type="button">Reset Scope</button>
           </div>
         </div>
         <div id="graph-container">
@@ -637,7 +859,7 @@ def render_github_pages_html(
             <button class="btn btn-sm" id="zoom-fit-btn" type="button" title="Reset View">Fit</button>
             <button class="btn btn-sm" id="toolbar-fullscreen-btn" type="button" title="Toggle Full Web-Page View">&#x26F6;</button>
           </div>
-          <svg id="kg-svg" viewBox="0 0 820 430" preserveAspectRatio="xMidYMid meet"></svg>
+          <svg id="kg-svg" viewBox="0 0 820 360" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="graph-status-banner" id="graph-status-banner" hidden>
             <span id="graph-status-text"></span>
             <button class="btn btn-sm" id="graph-status-clear" type="button">&times; Clear</button>
@@ -649,18 +871,18 @@ def render_github_pages_html(
       <div class="panel">
         <div class="panel-header">
           <div>
-            <h2 class="panel-title">Global Word Cloud &amp; Conceptual Hierarchy</h2>
-            <div class="panel-subtitle">Click any term or taxonomy category to filter documents</div>
+            <h2 class="panel-title">Scoped Word Cloud &amp; Sub-Hierarchy</h2>
+            <div class="panel-subtitle">Dynamically recomputed for the active domain/slice</div>
           </div>
         </div>
         <div class="word-cloud-box" id="word-cloud"></div>
-        <div class="panel-subtitle" style="margin-bottom: 0.4rem; font-weight: 600;">Conceptual Taxonomy (with OntoLogic Class URIs)</div>
+        <div class="panel-subtitle" style="margin-bottom: 0.35rem; font-weight: 600;">Subcategory Drill-Down (OntoLogic Classes)</div>
         <div class="taxonomy-list" id="taxonomy-list"></div>
       </div>
     </section>
 
     <section class="filter-bar">
-      <input type="search" id="search-input" placeholder="Search title, abstract chunks, concepts, authors, or notes..." />
+      <input type="search" id="search-input" placeholder="Search within current slice (title, abstract chunks, concepts, authors)..." />
       <select id="status-filter">
         <option value="">All Statuses</option>
         <option value="to-read">To-Read</option>
@@ -674,21 +896,25 @@ def render_github_pages_html(
         <option value="low">Low Priority</option>
       </select>
       <select id="type-filter">
-        <option value="">All Document Types</option>
+        <option value="">All Types</option>
         <option value="academic_paper">Academic Papers</option>
         <option value="technical_article">Technical Articles</option>
         <option value="technical_paper">Technical Papers</option>
         <option value="note">Research Notes</option>
       </select>
       <select id="tech-filter">
-        <option value="">All Technology Areas</option>
+        <option value="">All Tech Areas</option>
       </select>
-      <button class="btn" id="clear-filters" type="button">Clear All</button>
+      <div style="display:inline-flex; gap:0.3rem;">
+        <button class="btn btn-sm active" id="view-table-btn" type="button" title="Compact Synoptic Table">Table View</button>
+        <button class="btn btn-sm" id="view-cards-btn" type="button" title="Detailed Cards">Card View</button>
+      </div>
+      <button class="btn btn-sm" id="clear-filters" type="button">Reset All</button>
     </section>
 
     <div class="active-filters-row" id="active-filters-row" hidden></div>
 
-    <section class="doc-grid" id="doc-grid"></section>
+    <section id="doc-results-container"></section>
   </div>
 
   <dialog id="chunk-modal">
@@ -716,21 +942,25 @@ def render_github_pages_html(
     }};
 
     const state = {{
+      sliceDimension: "domain", // "domain" | "tech" | "workflow" | "doctype"
       query: "",
       status: "",
       priority: "",
       docType: "",
       techArea: "",
-      taxonomyPath: "",
+      taxonomyPath: "", // hierarchical prefix or exact path, e.g. "Hardware & Semiconductor Systems" or "Hardware & Semiconductor Systems > EDA & Hardware Verification"
       conceptId: "",
       docId: "",
       selectedGraphNodeId: "",
-      hiddenNodeTypes: new Set()
+      hiddenNodeTypes: new Set(),
+      viewMode: "table", // "table" (synoptic default) | "cards"
+      page: 1,
+      pageSize: 8
     }};
 
     let graphNodes = [];
     let graphEdges = [];
-    let viewBox = {{ x: 0, y: 0, w: 820, h: 430 }};
+    let viewBox = {{ x: 0, y: 0, w: 820, h: 360 }};
 
     function escapeHtml(str) {{
       return String(str ?? "")
@@ -741,6 +971,11 @@ def render_github_pages_html(
         .replace(/'/g, "&#39;");
     }}
 
+    function docMatchesTaxonomyPrefix(doc, prefix) {{
+      if (!prefix) return true;
+      return doc.taxonomy_paths.some(p => p === prefix || p.startsWith(prefix + " > "));
+    }}
+
     function getFilteredDocuments() {{
       return DB.documents.filter(doc => {{
         if (state.docId && doc.doc_id !== state.docId) return false;
@@ -748,7 +983,7 @@ def render_github_pages_html(
         if (state.priority && doc.priority !== state.priority) return false;
         if (state.docType && doc.doc_type !== state.docType) return false;
         if (state.techArea && !doc.technology_areas.includes(state.techArea)) return false;
-        if (state.taxonomyPath && !doc.taxonomy_paths.includes(state.taxonomyPath)) return false;
+        if (state.taxonomyPath && !docMatchesTaxonomyPrefix(doc, state.taxonomyPath)) return false;
         if (state.conceptId && !doc.concept_ids.includes(state.conceptId)) return false;
         if (state.query) {{
           const q = state.query.toLowerCase();
@@ -759,22 +994,28 @@ def render_github_pages_html(
       }});
     }}
 
-    function initKPIs() {{
+    function renderKPIs(filteredDocs) {{
       const kpiGrid = document.getElementById("kpi-grid");
-      const totalChunks = DB.documents.reduce((acc, d) => acc + d.chunks.length, 0);
-      const concepts = DB.knowledge_graph.nodes.filter(n => n.node_type === "Concept").length;
+      const totalChunks = filteredDocs.reduce((acc, d) => acc + d.chunks.length, 0);
+      const activeConcepts = new Set();
+      filteredDocs.forEach(d => d.concept_ids.forEach(c => activeConcepts.add(c)));
+      const activeTax = new Set();
+      filteredDocs.forEach(d => d.taxonomy_paths.forEach(p => activeTax.add(p)));
+
+      const isScoped = filteredDocs.length !== DB.documents.length;
+      const suffix = isScoped ? ` / ${{DB.documents.length}}` : "";
       const kpis = [
-        {{ label: "Tracked Documents", value: DB.documents.length }},
+        {{ label: "Scoped Documents", value: `${{filteredDocs.length}}${{suffix}}` }},
         {{ label: "Semantic Chunks", value: totalChunks }},
-        {{ label: "Domain Concepts", value: concepts }},
-        {{ label: "Taxonomy Classes", value: DB.taxonomy.length }},
-        {{ label: "Graph Nodes", value: DB.knowledge_graph.summary.node_count }},
-        {{ label: "Graph Edges", value: DB.knowledge_graph.summary.edge_count }}
+        {{ label: "Active Concepts", value: activeConcepts.size }},
+        {{ label: "Taxonomy Nodes", value: activeTax.size }},
+        {{ label: "Total Graph Nodes", value: DB.knowledge_graph.summary.node_count }},
+        {{ label: "Total Graph Edges", value: DB.knowledge_graph.summary.edge_count }}
       ];
       kpiGrid.innerHTML = kpis.map(k => `
         <div class="kpi-card">
-          <div class="kpi-value">${{k.value}}</div>
           <div class="kpi-label">${{k.label}}</div>
+          <div class="kpi-value">${{k.value}}</div>
         </div>
       `).join("");
     }}
@@ -791,18 +1032,241 @@ def render_github_pages_html(
       }});
     }}
 
-    function renderWordCloud() {{
+    /* Top-Level Domain & Slice Navigator + Breadcrumb Drill-Down */
+    function renderDomainNavigator(filteredDocs) {{
+      const crumbBar = document.getElementById("breadcrumb-bar");
+      const grid = document.getElementById("domain-cards-grid");
+      const scopeBadge = document.getElementById("graph-scope-badge");
+
+      // 1. Render Breadcrumb Trail
+      const crumbs = [{{ label: "All Domains Overview", action: () => {{
+        state.taxonomyPath = "";
+        state.techArea = "";
+        state.status = "";
+        state.docType = "";
+        state.docId = "";
+        state.conceptId = "";
+        state.selectedGraphNodeId = "";
+        document.getElementById("tech-filter").value = "";
+        document.getElementById("status-filter").value = "";
+        document.getElementById("type-filter").value = "";
+        state.page = 1;
+        refreshAll();
+      }} }}];
+
+      if (state.taxonomyPath) {{
+        const parts = state.taxonomyPath.split(" > ");
+        parts.forEach((part, idx) => {{
+          const subPath = parts.slice(0, idx + 1).join(" > ");
+          crumbs.push({{
+            label: part,
+            action: () => {{
+              state.taxonomyPath = subPath;
+              state.page = 1;
+              refreshAll();
+            }}
+          }});
+        }});
+      }} else if (state.techArea) {{
+        crumbs.push({{ label: `Tech Area: ${{state.techArea}}`, action: () => {{}} }});
+      }} else if (state.status) {{
+        crumbs.push({{ label: `Stage: ${{state.status.toUpperCase()}}`, action: () => {{}} }});
+      }} else if (state.docType) {{
+        crumbs.push({{ label: `Type: ${{state.docType.replace("_", " ")}}`, action: () => {{}} }});
+      }}
+
+      scopeBadge.textContent = crumbs[crumbs.length - 1].label;
+
+      crumbBar.innerHTML = `<span style="color:var(--text-muted); margin-right:0.25rem;">Scope:</span>` +
+        crumbs.map((c, idx) => {{
+          const isLast = idx === crumbs.length - 1;
+          return `<span class="crumb ${{isLast ? "current" : ""}}" data-idx="${{idx}}">${{escapeHtml(c.label)}}</span>` +
+            (isLast ? "" : `<span class="crumb-sep">&rsaquo;</span>`);
+        }}).join("") +
+        `<span style="margin-left:auto; color:var(--text-muted); font-size:0.74rem;">${{filteredDocs.length}} matching docs</span>`;
+
+      crumbBar.querySelectorAll(".crumb").forEach(el => {{
+        el.addEventListener("click", () => {{
+          const idx = Number(el.dataset.idx);
+          if (crumbs[idx]) crumbs[idx].action();
+        }});
+      }});
+
+      // 2. Render Top-Level Slice Cards based on active sliceDimension
+      if (state.sliceDimension === "domain") {{
+        // Root domains (parent_path === null)
+        const roots = DB.taxonomy.filter(t => !t.parent_path);
+        grid.innerHTML = roots.map(root => {{
+          const rootDocs = DB.documents.filter(d => docMatchesTaxonomyPrefix(d, root.path));
+          const isActive = state.taxonomyPath === root.path || state.taxonomyPath.startsWith(root.path + " > ");
+          const children = DB.taxonomy.filter(t => t.parent_path && (t.parent_path === root.path || t.parent_path.startsWith(root.path + " > ")));
+          return `
+            <div class="domain-card ${{isActive ? "active" : ""}}" data-root="${{escapeHtml(root.path)}}">
+              <div>
+                <div class="domain-card-head">
+                  <h3 class="domain-card-title">${{escapeHtml(root.label)}}</h3>
+                  <span class="domain-card-count">${{rootDocs.length}} docs</span>
+                </div>
+                <div class="tax-uri" style="margin:0.15rem 0 0.45rem;">${{escapeHtml(root.ontologic_class_uri)}}</div>
+              </div>
+              <div class="domain-sub-pills">
+                ${{children.map(ch => {{
+                  const subActive = state.taxonomyPath === ch.path || state.taxonomyPath.startsWith(ch.path + " > ");
+                  const depthPrefix = ch.parent_path === root.path ? "" : "↳ ";
+                  return `<span class="sub-pill ${{subActive ? "active" : ""}}" data-subpath="${{escapeHtml(ch.path)}}">${{depthPrefix}}${{escapeHtml(ch.label)}} (${{ch.document_ids.length}})</span>`;
+                }}).join("")}}
+              </div>
+            </div>
+          `;
+        }}).join("");
+
+        grid.querySelectorAll(".domain-card").forEach(card => {{
+          card.addEventListener("click", e => {{
+            const subPill = e.target.closest(".sub-pill");
+            if (subPill) {{
+              e.stopPropagation();
+              const sp = subPill.dataset.subpath;
+              state.taxonomyPath = state.taxonomyPath === sp ? "" : sp;
+            }} else {{
+              const rp = card.dataset.root;
+              state.taxonomyPath = state.taxonomyPath === rp ? "" : rp;
+            }}
+            state.page = 1;
+            refreshAll();
+          }});
+        }});
+      }} else if (state.sliceDimension === "tech") {{
+        const areaMap = new Map();
+        DB.documents.forEach(d => {{
+          d.technology_areas.forEach(ta => {{
+            if (!areaMap.has(ta)) areaMap.set(ta, []);
+            areaMap.get(ta).push(d);
+          }});
+        }});
+        const entries = [...areaMap.entries()].sort((a, b) => b[1].length - a[1].length);
+        grid.innerHTML = entries.map(([ta, docs]) => {{
+          const isActive = state.techArea === ta;
+          const sampleConcepts = [...new Set(docs.flatMap(d => d.concept_ids))].slice(0, 3);
+          return `
+            <div class="domain-card ${{isActive ? "active" : ""}}" data-tech="${{escapeHtml(ta)}}">
+              <div class="domain-card-head">
+                <h3 class="domain-card-title">${{escapeHtml(ta)}}</h3>
+                <span class="domain-card-count">${{docs.length}} docs</span>
+              </div>
+              <div class="domain-sub-pills">
+                ${{sampleConcepts.map(c => `<span class="sub-pill">${{escapeHtml(c.replace("concept:", ""))}}</span>`).join("")}}
+              </div>
+            </div>
+          `;
+        }}).join("");
+        grid.querySelectorAll(".domain-card").forEach(card => {{
+          card.addEventListener("click", () => {{
+            const ta = card.dataset.tech;
+            state.techArea = state.techArea === ta ? "" : ta;
+            document.getElementById("tech-filter").value = state.techArea;
+            state.page = 1;
+            refreshAll();
+          }});
+        }});
+      }} else if (state.sliceDimension === "workflow") {{
+        const stages = [
+          {{ key: "to-read", label: "To-Read Queue", desc: "Queued papers & articles awaiting deep review" }},
+          {{ key: "reading", label: "Currently Reading", desc: "Active deep-dive analysis in progress" }},
+          {{ key: "read", label: "Completed & Synthesized", desc: "Reviewed and integrated into synthesis notes" }}
+        ];
+        grid.innerHTML = stages.map(st => {{
+          const docs = DB.documents.filter(d => d.reading_status === st.key);
+          const isActive = state.status === st.key;
+          const highCount = docs.filter(d => d.priority === "high").length;
+          return `
+            <div class="domain-card ${{isActive ? "active" : ""}}" data-status="${{st.key}}">
+              <div>
+                <div class="domain-card-head">
+                  <h3 class="domain-card-title">${{st.label}}</h3>
+                  <span class="domain-card-count">${{docs.length}} docs</span>
+                </div>
+                <div class="panel-subtitle" style="margin-top:0.2rem;">${{st.desc}}</div>
+              </div>
+              <div class="domain-sub-pills">
+                <span class="sub-pill">${{highCount}} high priority</span>
+              </div>
+            </div>
+          `;
+        }}).join("");
+        grid.querySelectorAll(".domain-card").forEach(card => {{
+          card.addEventListener("click", () => {{
+            const st = card.dataset.status;
+            state.status = state.status === st ? "" : st;
+            document.getElementById("status-filter").value = state.status;
+            state.page = 1;
+            refreshAll();
+          }});
+        }});
+      }} else if (state.sliceDimension === "doctype") {{
+        const types = [
+          {{ key: "academic_paper", label: "Academic Papers", desc: "Peer-reviewed & arXiv research papers" }},
+          {{ key: "technical_paper", label: "Technical Papers", desc: "Industrial & architecture whitepapers" }},
+          {{ key: "technical_article", label: "Technical Articles", desc: "Semiconductor Engineering & industry briefs" }},
+          {{ key: "note", label: "Research & Synthesis Notes", desc: "Cross-paper synthesis & OntoLogic bridges" }}
+        ];
+        grid.innerHTML = types.map(tp => {{
+          const docs = DB.documents.filter(d => d.doc_type === tp.key);
+          const isActive = state.docType === tp.key;
+          return `
+            <div class="domain-card ${{isActive ? "active" : ""}}" data-doctype="${{tp.key}}">
+              <div>
+                <div class="domain-card-head">
+                  <h3 class="domain-card-title">${{tp.label}}</h3>
+                  <span class="domain-card-count">${{docs.length}} docs</span>
+                </div>
+                <div class="panel-subtitle" style="margin-top:0.2rem;">${{tp.desc}}</div>
+              </div>
+            </div>
+          `;
+        }}).join("");
+        grid.querySelectorAll(".domain-card").forEach(card => {{
+          card.addEventListener("click", () => {{
+            const dt = card.dataset.doctype;
+            state.docType = state.docType === dt ? "" : dt;
+            document.getElementById("type-filter").value = state.docType;
+            state.page = 1;
+            refreshAll();
+          }});
+        }});
+      }}
+    }}
+
+    function renderWordCloud(filteredDocs) {{
       const box = document.getElementById("word-cloud");
-      box.innerHTML = DB.word_cloud.slice(0, 26).map(item => {{
-        const size = (0.76 + item.weight * 0.68).toFixed(2);
-        const active = state.query.toLowerCase() === item.term.toLowerCase() ? "active" : "";
-        return `<span class="wc-term ${{active}}" style="font-size:${{size}}rem" data-term="${{escapeHtml(item.term)}}" title="Frequency: ${{item.count}}">${{escapeHtml(item.term)}}</span>`;
+      // Compute scoped word cloud from currently filtered documents
+      const counts = new Map();
+      filteredDocs.forEach(doc => {{
+        (doc.word_cloud || []).forEach(w => {{
+          counts.set(w.term, (counts.get(w.term) || 0) + w.count);
+        }});
+      }});
+      const sorted = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 24);
+      const maxCount = sorted.length ? sorted[0][1] : 1;
+
+      if (!sorted.length) {{
+        box.innerHTML = `<span class="panel-subtitle">No terms in current filter scope.</span>`;
+        return;
+      }}
+
+      box.innerHTML = sorted.map(([term, count]) => {{
+        const weight = count / maxCount;
+        const size = (0.74 + weight * 0.62).toFixed(2);
+        const active = state.query.toLowerCase() === term.toLowerCase() ? "active" : "";
+        return `<span class="wc-term ${{active}}" style="font-size:${{size}}rem" data-term="${{escapeHtml(term)}}" title="Scoped frequency: ${{count}}">${{escapeHtml(term)}}</span>`;
       }}).join("");
       box.querySelectorAll(".wc-term").forEach(el => {{
         el.addEventListener("click", () => {{
           const term = el.dataset.term;
           state.query = state.query === term ? "" : term;
           document.getElementById("search-input").value = state.query;
+          state.page = 1;
           refreshAll();
         }});
       }});
@@ -810,7 +1274,12 @@ def render_github_pages_html(
 
     function renderTaxonomy() {{
       const list = document.getElementById("taxonomy-list");
-      list.innerHTML = DB.taxonomy.map(cat => {{
+      // If a top-level domain is selected, highlight or prioritize its subtree
+      const items = state.taxonomyPath
+        ? DB.taxonomy.filter(cat => cat.path === state.taxonomyPath || cat.path.startsWith(state.taxonomyPath + " > ") || state.taxonomyPath.startsWith(cat.path + " > "))
+        : DB.taxonomy;
+
+      list.innerHTML = items.map(cat => {{
         const active = state.taxonomyPath === cat.path ? "active" : "";
         const depth = (cat.path.match(/>/g) || []).length;
         const indent = depth * 12;
@@ -831,6 +1300,7 @@ def render_github_pages_html(
           if (!state.taxonomyPath && state.selectedGraphNodeId.startsWith("taxonomy:")) {{
             state.selectedGraphNodeId = "";
           }}
+          state.page = 1;
           refreshAll();
         }});
       }});
@@ -839,10 +1309,10 @@ def render_github_pages_html(
     function renderActiveFilterPills(filteredDocs) {{
       const row = document.getElementById("active-filters-row");
       const pills = [];
+      if (state.taxonomyPath) pills.push({{ key: "taxonomyPath", label: `Domain Slice: ${{state.taxonomyPath}}` }});
+      if (state.techArea) pills.push({{ key: "techArea", label: `Tech Area: ${{state.techArea}}` }});
       if (state.docId) pills.push({{ key: "docId", label: `Document: ${{state.docId}}` }});
       if (state.conceptId) pills.push({{ key: "conceptId", label: `Concept: ${{state.conceptId.replace("concept:", "")}}` }});
-      if (state.taxonomyPath) pills.push({{ key: "taxonomyPath", label: `Taxonomy: ${{state.taxonomyPath}}` }});
-      if (state.techArea) pills.push({{ key: "techArea", label: `Tech Area: ${{state.techArea}}` }});
       if (state.status) pills.push({{ key: "status", label: `Status: ${{state.status}}` }});
       if (state.priority) pills.push({{ key: "priority", label: `Priority: ${{state.priority}}` }});
       if (state.docType) pills.push({{ key: "docType", label: `Type: ${{state.docType}}` }});
@@ -854,7 +1324,7 @@ def render_github_pages_html(
       }} else {{
         row.hidden = false;
         row.innerHTML = `
-          <span style="font-size:0.78rem; color:var(--text-muted);">Showing ${{filteredDocs.length}} of ${{DB.documents.length}} documents:</span>
+          <span style="font-size:0.76rem; color:var(--text-muted);">Active Slice (${{filteredDocs.length}} of ${{DB.documents.length}} docs):</span>
           ${{pills.map(p => `<span class="filter-pill" data-key="${{p.key}}">${{escapeHtml(p.label)}} &times;</span>`).join("")}}
         `;
         row.querySelectorAll(".filter-pill").forEach(el => {{
@@ -867,6 +1337,7 @@ def render_github_pages_html(
             if (k === "priority") document.getElementById("priority-filter").value = "";
             if (k === "docType") document.getElementById("type-filter").value = "";
             if (k === "techArea") document.getElementById("tech-filter").value = "";
+            state.page = 1;
             refreshAll();
           }});
         }});
@@ -876,78 +1347,161 @@ def render_github_pages_html(
       const bannerText = document.getElementById("graph-status-text");
       if (pills.length) {{
         banner.hidden = false;
-        bannerText.textContent = `${{pills.map(p => p.label).join(" • ")}} (${{filteredDocs.length}} matching docs)`;
+        bannerText.textContent = `${{pills.map(p => p.label).join(" • ")}} (${{filteredDocs.length}} docs in slice)`;
       }} else {{
         banner.hidden = true;
       }}
     }}
 
-    function renderDocuments() {{
-      const grid = document.getElementById("doc-grid");
-      const filtered = getFilteredDocuments();
+    function renderDocuments(filtered) {{
+      const container = document.getElementById("doc-results-container");
       renderActiveFilterPills(filtered);
 
       if (!filtered.length) {{
-        grid.innerHTML = `<div class="panel" style="grid-column: 1 / -1; text-align:center; color: var(--text-muted);">No documents match the current filters. Click "Reset Filter" or "Clear All".</div>`;
+        container.innerHTML = `<div class="panel" style="text-align:center; color: var(--text-muted);">No documents match the current domain slice or filters. Click "Reset All".</div>`;
         return;
       }}
 
-      grid.innerHTML = filtered.map(doc => {{
-        const statusClass = `status-${{doc.reading_status}}`;
-        const prioClass = doc.priority === "high" ? "prio-high" : "";
-        const authors = doc.authors.length ? doc.authors.join(", ") : "Staff / Research Note";
-        const inst = doc.institutions.length ? ` &bull; ${{doc.institutions.join(", ")}}` : "";
-        const relBadges = doc.relations.map(r => `<span class="badge">${{escapeHtml(r.relation_type)}} &rarr; ${{escapeHtml(r.target_doc_id)}}</span>`).join("");
-        const techChips = doc.technology_areas.slice(0, 4).map(t => `<span class="chip doc-tech-chip" data-tech="${{escapeHtml(t)}}">${{escapeHtml(t)}}</span>`).join("");
-        const conceptChips = doc.concept_ids.map(c => `<span class="chip chip-concept doc-concept-chip" data-concept="${{escapeHtml(c)}}">${{escapeHtml(c.replace("concept:", ""))}}</span>`).join("");
-        return `
-          <article class="doc-card">
-            <div>
-              <div class="badge-row">
-                <span class="badge ${{statusClass}}">${{escapeHtml(doc.reading_status)}}</span>
-                <span class="badge ${{prioClass}}">priority: ${{escapeHtml(doc.priority)}}</span>
-                <span class="badge">${{escapeHtml(doc.doc_type.replace("_", " "))}}</span>
-                ${{doc.published_date ? `<span class="badge">${{escapeHtml(doc.published_date)}}</span>` : ""}}
-              </div>
-              <h3 class="doc-title">
-                ${{doc.url ? `<a href="${{escapeHtml(doc.url)}}" target="_blank" rel="noopener">${{escapeHtml(doc.title)}}</a>` : escapeHtml(doc.title)}}
-              </h3>
-              <div class="doc-meta">${{escapeHtml(authors)}}${{inst}}</div>
-              ${{doc.notes ? `<p style="font-size:0.82rem; color: var(--text-muted); margin: 0.5rem 0 0;"><strong>Notes:</strong> ${{escapeHtml(doc.notes)}}</p>` : ""}}
-            </div>
-            <div>
-              <div class="chip-list" style="margin-bottom:0.45rem;">${{techChips}}</div>
-              <div class="chip-list" style="margin-bottom:0.65rem;">${{conceptChips}}</div>
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                <div class="badge-row">${{relBadges}}</div>
-                <button class="btn inspect-btn" data-doc="${{escapeHtml(doc.doc_id)}}" type="button">
-                  Inspect ${{doc.chunks.length}} Semantic Chunks
-                </button>
-              </div>
-            </div>
-          </article>
-        `;
-      }}).join("");
+      const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+      const startIdx = (state.page - 1) * state.pageSize;
+      const pageDocs = filtered.slice(startIdx, startIdx + state.pageSize);
 
-      grid.querySelectorAll(".inspect-btn").forEach(btn => {{
+      if (state.viewMode === "table") {{
+        container.innerHTML = `
+          <div class="synoptic-table-wrap">
+            <table class="synoptic-table">
+              <thead>
+                <tr>
+                  <th>Status / Priority</th>
+                  <th>Document Title &amp; Authors</th>
+                  <th>Type</th>
+                  <th>Primary Domain &amp; Concepts</th>
+                  <th>Chunks</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${{pageDocs.map(doc => {{
+                  const statusClass = `status-${{doc.reading_status}}`;
+                  const prioClass = doc.priority === "high" ? "prio-high" : "";
+                  const authors = doc.authors.length ? doc.authors.slice(0, 3).join(", ") + (doc.authors.length > 3 ? " et al." : "") : "Research Note";
+                  const topConcepts = doc.concept_ids.slice(0, 4).map(c => `<span class="chip chip-concept doc-concept-chip" data-concept="${{escapeHtml(c)}}">${{escapeHtml(c.replace("concept:", ""))}}</span>`).join("");
+                  const topTech = doc.technology_areas.slice(0, 2).map(t => `<span class="chip doc-tech-chip" data-tech="${{escapeHtml(t)}}">${{escapeHtml(t)}}</span>`).join("");
+                  return `
+                    <tr>
+                      <td>
+                        <div class="badge-row">
+                          <span class="badge ${{statusClass}}">${{escapeHtml(doc.reading_status)}}</span>
+                          <span class="badge ${{prioClass}}">${{escapeHtml(doc.priority)}}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style="font-weight:700; margin-bottom:0.15rem;">
+                          ${{doc.url ? `<a href="${{escapeHtml(doc.url)}}" target="_blank" rel="noopener">${{escapeHtml(doc.title)}}</a>` : escapeHtml(doc.title)}}
+                        </div>
+                        <div class="doc-meta">${{escapeHtml(doc.doc_id)}} &bull; ${{escapeHtml(authors)}} ${{doc.published_date ? `&bull; ${{escapeHtml(doc.published_date)}}` : ""}}</div>
+                      </td>
+                      <td><span class="badge">${{escapeHtml(doc.doc_type.replace("_", " "))}}</span></td>
+                      <td>
+                        <div class="chip-list" style="margin-bottom:0.25rem;">${{topTech}}</div>
+                        <div class="chip-list">${{topConcepts}}</div>
+                      </td>
+                      <td>
+                        <button class="btn btn-sm inspect-btn" data-doc="${{escapeHtml(doc.doc_id)}}" type="button">
+                          ${{doc.chunks.length}} Chunks
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }}).join("")}}
+              </tbody>
+            </table>
+            <div class="pagination-bar">
+              <span>Showing ${{startIdx + 1}}&ndash;${{Math.min(filtered.length, startIdx + pageDocs.length)}} of ${{filtered.length}} documents in slice</span>
+              <div style="display:flex; gap:0.4rem; align-items:center;">
+                <button class="btn btn-sm" id="prev-page-btn" type="button" ${{state.page <= 1 ? "disabled" : ""}}>&larr; Prev</button>
+                <span style="font-family:var(--font-mono); font-size:0.75rem;">Page ${{state.page}} / ${{totalPages}}</span>
+                <button class="btn btn-sm" id="next-page-btn" type="button" ${{state.page >= totalPages ? "disabled" : ""}}>Next &rarr;</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }} else {{
+        container.innerHTML = `
+          <div class="doc-grid">
+            ${{pageDocs.map(doc => {{
+              const statusClass = `status-${{doc.reading_status}}`;
+              const prioClass = doc.priority === "high" ? "prio-high" : "";
+              const authors = doc.authors.length ? doc.authors.join(", ") : "Staff / Research Note";
+              const inst = doc.institutions.length ? ` &bull; ${{doc.institutions.join(", ")}}` : "";
+              const relBadges = doc.relations.map(r => `<span class="badge">${{escapeHtml(r.relation_type)}} &rarr; ${{escapeHtml(r.target_doc_id)}}</span>`).join("");
+              const techChips = doc.technology_areas.slice(0, 4).map(t => `<span class="chip doc-tech-chip" data-tech="${{escapeHtml(t)}}">${{escapeHtml(t)}}</span>`).join("");
+              const conceptChips = doc.concept_ids.map(c => `<span class="chip chip-concept doc-concept-chip" data-concept="${{escapeHtml(c)}}">${{escapeHtml(c.replace("concept:", ""))}}</span>`).join("");
+              return `
+                <article class="doc-card">
+                  <div>
+                    <div class="badge-row">
+                      <span class="badge ${{statusClass}}">${{escapeHtml(doc.reading_status)}}</span>
+                      <span class="badge ${{prioClass}}">priority: ${{escapeHtml(doc.priority)}}</span>
+                      <span class="badge">${{escapeHtml(doc.doc_type.replace("_", " "))}}</span>
+                      ${{doc.published_date ? `<span class="badge">${{escapeHtml(doc.published_date)}}</span>` : ""}}
+                    </div>
+                    <h3 class="doc-title">
+                      ${{doc.url ? `<a href="${{escapeHtml(doc.url)}}" target="_blank" rel="noopener">${{escapeHtml(doc.title)}}</a>` : escapeHtml(doc.title)}}
+                    </h3>
+                    <div class="doc-meta">${{escapeHtml(authors)}}${{inst}}</div>
+                    ${{doc.notes ? `<p style="font-size:0.8rem; color: var(--text-muted); margin: 0.45rem 0 0;"><strong>Notes:</strong> ${{escapeHtml(doc.notes)}}</p>` : ""}}
+                  </div>
+                  <div>
+                    <div class="chip-list" style="margin-bottom:0.4rem;">${{techChips}}</div>
+                    <div class="chip-list" style="margin-bottom:0.55rem;">${{conceptChips}}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                      <div class="badge-row">${{relBadges}}</div>
+                      <button class="btn btn-sm inspect-btn" data-doc="${{escapeHtml(doc.doc_id)}}" type="button">
+                        Inspect ${{doc.chunks.length}} Chunks
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              `;
+            }}).join("")}}
+          </div>
+          <div class="pagination-bar" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-top:0.85rem;">
+            <span>Showing ${{startIdx + 1}}&ndash;${{Math.min(filtered.length, startIdx + pageDocs.length)}} of ${{filtered.length}} documents in slice</span>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+              <button class="btn btn-sm" id="prev-page-btn" type="button" ${{state.page <= 1 ? "disabled" : ""}}>&larr; Prev</button>
+              <span style="font-family:var(--font-mono); font-size:0.75rem;">Page ${{state.page}} / ${{totalPages}}</span>
+              <button class="btn btn-sm" id="next-page-btn" type="button" ${{state.page >= totalPages ? "disabled" : ""}}>Next &rarr;</button>
+            </div>
+          </div>
+        `;
+      }}
+
+      container.querySelectorAll(".inspect-btn").forEach(btn => {{
         btn.addEventListener("click", () => openChunkModal(btn.dataset.doc));
       }});
-      grid.querySelectorAll(".doc-tech-chip").forEach(chip => {{
+      container.querySelectorAll(".doc-tech-chip").forEach(chip => {{
         chip.addEventListener("click", () => {{
           const t = chip.dataset.tech;
           state.techArea = state.techArea === t ? "" : t;
           document.getElementById("tech-filter").value = state.techArea;
+          state.page = 1;
           refreshAll();
         }});
       }});
-      grid.querySelectorAll(".doc-concept-chip").forEach(chip => {{
+      container.querySelectorAll(".doc-concept-chip").forEach(chip => {{
         chip.addEventListener("click", () => {{
           const c = chip.dataset.concept;
           state.conceptId = state.conceptId === c ? "" : c;
           state.selectedGraphNodeId = state.conceptId;
+          state.page = 1;
           refreshAll();
         }});
       }});
+      const prevBtn = document.getElementById("prev-page-btn");
+      const nextBtn = document.getElementById("next-page-btn");
+      if (prevBtn) prevBtn.addEventListener("click", () => {{ if (state.page > 1) {{ state.page--; renderDocuments(filtered); }} }});
+      if (nextBtn) nextBtn.addEventListener("click", () => {{ if (state.page < totalPages) {{ state.page++; renderDocuments(filtered); }} }});
     }}
 
     function openChunkModal(docId) {{
@@ -990,10 +1544,10 @@ def render_github_pages_html(
 
       graphNodes = [];
       const ringConfig = [
-        {{ type: "Document", rx: 115, ry: 72, offset: 0.15 }},
-        {{ type: "Concept", rx: 225, ry: 125, offset: 0.55 }},
-        {{ type: "TaxonomyCategory", rx: 315, ry: 165, offset: 0.95 }},
-        {{ type: "TechnologyArea", rx: 365, ry: 188, offset: 1.35 }}
+        {{ type: "Document", rx: 110, ry: 65, offset: 0.15 }},
+        {{ type: "Concept", rx: 215, ry: 110, offset: 0.55 }},
+        {{ type: "TaxonomyCategory", rx: 305, ry: 142, offset: 0.95 }},
+        {{ type: "TechnologyArea", rx: 360, ry: 162, offset: 1.35 }}
       ];
 
       ringConfig.forEach(cfg => {{
@@ -1003,7 +1557,7 @@ def render_github_pages_html(
           graphNodes.push({{
             ...n,
             x: 410 + Math.cos(angle) * cfg.rx,
-            y: 215 + Math.sin(angle) * cfg.ry
+            y: 180 + Math.sin(angle) * cfg.ry
           }});
         }});
       }});
@@ -1011,14 +1565,13 @@ def render_github_pages_html(
       const nodeById = Object.fromEntries(graphNodes.map(n => [n.node_id, n]));
       graphEdges = DB.knowledge_graph.edges.filter(e => nodeById[e.source] && nodeById[e.target]);
 
-      // Force-directed repulsion + spring relaxation
       for (let iter = 0; iter < 80; iter++) {{
         for (let i = 0; i < graphNodes.length; i++) {{
           for (let j = i + 1; j < graphNodes.length; j++) {{
             const dx = graphNodes[j].x - graphNodes[i].x;
             const dy = graphNodes[j].y - graphNodes[i].y;
             const dist = Math.hypot(dx, dy) || 0.1;
-            const minDist = 66;
+            const minDist = 62;
             if (dist < minDist) {{
               const push = (minDist - dist) * 0.22;
               const ux = (dx / dist) * push;
@@ -1031,8 +1584,8 @@ def render_github_pages_html(
           }}
         }}
         graphNodes.forEach(n => {{
-          n.x = Math.max(48, Math.min(755, n.x));
-          n.y = Math.max(30, Math.min(395, n.y));
+          n.x = Math.max(45, Math.min(755, n.x));
+          n.y = Math.max(26, Math.min(335, n.y));
         }});
       }}
     }}
@@ -1048,13 +1601,9 @@ def render_github_pages_html(
 
     function handleGraphNodeClick(node) {{
       const alreadyActive = isNodeActiveFilter(node);
-      // Reset previous graph-driven filter keys before setting the new one
       state.docId = "";
       state.conceptId = "";
-      state.taxonomyPath = "";
-      state.techArea = "";
       state.selectedGraphNodeId = "";
-      document.getElementById("tech-filter").value = "";
 
       if (!alreadyActive) {{
         state.selectedGraphNodeId = node.node_id;
@@ -1063,26 +1612,40 @@ def render_github_pages_html(
         }} else if (node.node_type === "Concept") {{
           state.conceptId = node.node_id;
         }} else if (node.node_type === "TechnologyArea") {{
-          state.techArea = node.label;
+          state.techArea = state.techArea === node.label ? "" : node.label;
           document.getElementById("tech-filter").value = state.techArea;
         }} else if (node.node_type === "TaxonomyCategory") {{
-          state.taxonomyPath = (node.properties && node.properties.path) || "";
-          if (!state.taxonomyPath) {{
-            const match = DB.taxonomy.find(t => t.label === node.label);
-            if (match) state.taxonomyPath = match.path;
-          }}
+          const path = (node.properties && node.properties.path) || "";
+          state.taxonomyPath = state.taxonomyPath === path ? "" : path;
         }}
       }}
+      state.page = 1;
       refreshAll();
     }}
 
-    function drawGraph() {{
+    function drawGraph(filteredDocs) {{
       const svg = document.getElementById("kg-svg");
-      const visibleNodes = graphNodes.filter(n => !state.hiddenNodeTypes.has(n.node_type));
+      const allowedDocIds = new Set(filteredDocs.map(d => `doc:${{d.doc_id}}`));
+      const isSliceScoped = filteredDocs.length < DB.documents.length && !state.docId;
+
+      // Keep nodes that belong to the active slice (or are connected to visible documents in the slice)
+      const sliceConnectedNodeIds = new Set(allowedDocIds);
+      if (isSliceScoped) {{
+        graphEdges.forEach(e => {{
+          if (allowedDocIds.has(e.source)) sliceConnectedNodeIds.add(e.target);
+          if (allowedDocIds.has(e.target)) sliceConnectedNodeIds.add(e.source);
+        }});
+      }}
+
+      const visibleNodes = graphNodes.filter(n => {{
+        if (state.hiddenNodeTypes.has(n.node_type)) return false;
+        if (isSliceScoped && !sliceConnectedNodeIds.has(n.node_id)) return false;
+        return true;
+      }});
+
       const nodeById = Object.fromEntries(visibleNodes.map(n => [n.node_id, n]));
       const visibleEdges = graphEdges.filter(e => nodeById[e.source] && nodeById[e.target]);
 
-      // Determine active node(s) and their 1-hop neighbors for visual highlighting
       const activeIds = new Set(visibleNodes.filter(isNodeActiveFilter).map(n => n.node_id));
       const neighborIds = new Set(activeIds);
       visibleEdges.forEach(e => {{
@@ -1097,7 +1660,7 @@ def render_github_pages_html(
         const connected = activeIds.has(e.source) || activeIds.has(e.target);
         const stroke = connected ? "var(--accent)" : "rgba(148,163,184,0.28)";
         const width = connected ? "2.4" : "1.2";
-        const opacity = hasHighlight ? (connected ? "0.95" : "0.15") : "0.85";
+        const opacity = hasHighlight ? (connected ? "0.95" : "0.18") : "0.85";
         return `<line class="kg-edge" data-idx="${{idx}}" data-source="${{escapeHtml(e.source)}}" data-target="${{escapeHtml(e.target)}}" x1="${{s.x}}" y1="${{s.y}}" x2="${{t.x}}" y2="${{t.y}}" stroke="${{stroke}}" stroke-width="${{width}}" opacity="${{opacity}}" />`;
       }}).join("");
 
@@ -1105,8 +1668,8 @@ def render_github_pages_html(
         const color = NODE_COLORS[n.node_type] || "#38bdf8";
         const isSelected = activeIds.has(n.node_id);
         const isNeighbor = neighborIds.has(n.node_id);
-        const r = n.node_type === "Document" ? 11.5 : 8.5;
-        const opacity = hasHighlight ? (isNeighbor ? "1" : "0.22") : "1";
+        const r = n.node_type === "Document" ? 11 : 8;
+        const opacity = hasHighlight ? (isNeighbor ? "1" : "0.24") : "1";
         const shortLabel = n.label.length > 26 ? n.label.slice(0, 24) + "…" : n.label;
         const halo = isSelected
           ? `<circle class="kg-halo" r="${{r + 6}}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="3 2"></circle>`
@@ -1116,7 +1679,7 @@ def render_github_pages_html(
             <title>${{escapeHtml(n.node_type)}}: ${{escapeHtml(n.label)}} (click to filter, drag to move)</title>
             ${{halo}}
             <circle r="${{r}}" fill="${{color}}" stroke="${{isSelected ? "#ffffff" : "#0f172a"}}" stroke-width="${{isSelected ? "2.8" : "2"}}"></circle>
-            <text x="${{r + 5}}" y="4" fill="currentColor" font-size="${{isSelected ? "11.5" : "10.2"}}" font-weight="${{isSelected ? "700" : "500"}}" font-family="var(--font-sans)" pointer-events="none">${{escapeHtml(shortLabel)}}</text>
+            <text x="${{r + 5}}" y="4" fill="currentColor" font-size="${{isSelected ? "11.2" : "10"}}" font-weight="${{isSelected ? "700" : "500"}}" font-family="var(--font-sans)" pointer-events="none">${{escapeHtml(shortLabel)}}</text>
           </g>
         `;
       }}).join("");
@@ -1147,7 +1710,7 @@ def render_github_pages_html(
             state.hiddenNodeTypes.add(t);
           }}
           renderGraphLegend();
-          drawGraph();
+          drawGraph(getFilteredDocuments());
         }});
       }});
     }}
@@ -1261,7 +1824,7 @@ def render_github_pages_html(
         e.preventDefault();
         const factor = e.deltaY < 0 ? 0.88 : 1.14;
         const newW = Math.max(260, Math.min(1800, viewBox.w * factor));
-        const newH = Math.max(136, Math.min(940, viewBox.h * factor));
+        const newH = Math.max(120, Math.min(820, viewBox.h * factor));
         viewBox.x += (viewBox.w - newW) * 0.5;
         viewBox.y += (viewBox.h - newH) * 0.5;
         viewBox.w = newW;
@@ -1284,14 +1847,14 @@ def render_github_pages_html(
         updateViewBox();
       }});
       document.getElementById("zoom-fit-btn").addEventListener("click", () => {{
-        viewBox = {{ x: 0, y: 0, w: 820, h: 430 }};
+        viewBox = {{ x: 0, y: 0, w: 820, h: 360 }};
         updateViewBox();
       }});
       document.getElementById("relayout-graph-btn").addEventListener("click", () => {{
-        viewBox = {{ x: 0, y: 0, w: 820, h: 430 }};
+        viewBox = {{ x: 0, y: 0, w: 820, h: 360 }};
         updateViewBox();
         computeGraphLayout();
-        drawGraph();
+        drawGraph(getFilteredDocuments());
       }});
 
       function toggleGraphFullscreen(forceState) {{
@@ -1330,6 +1893,7 @@ def render_github_pages_html(
       state.conceptId = "";
       state.docId = "";
       state.selectedGraphNodeId = "";
+      state.page = 1;
       document.getElementById("search-input").value = "";
       document.getElementById("status-filter").value = "";
       document.getElementById("priority-filter").value = "";
@@ -1339,30 +1903,60 @@ def render_github_pages_html(
     }}
 
     function refreshAll() {{
-      drawGraph();
-      renderWordCloud();
+      const filteredDocs = getFilteredDocuments();
+      renderKPIs(filteredDocs);
+      renderDomainNavigator(filteredDocs);
+      drawGraph(filteredDocs);
+      renderWordCloud(filteredDocs);
       renderTaxonomy();
-      renderDocuments();
+      renderDocuments(filteredDocs);
     }}
+
+    document.querySelectorAll("#slice-dimension-tabs .slice-tab").forEach(tab => {{
+      tab.addEventListener("click", () => {{
+        document.querySelectorAll("#slice-dimension-tabs .slice-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        state.sliceDimension = tab.dataset.dim;
+        refreshAll();
+      }});
+    }});
+
+    document.getElementById("view-table-btn").addEventListener("click", () => {{
+      state.viewMode = "table";
+      document.getElementById("view-table-btn").classList.add("active");
+      document.getElementById("view-cards-btn").classList.remove("active");
+      renderDocuments(getFilteredDocuments());
+    }});
+    document.getElementById("view-cards-btn").addEventListener("click", () => {{
+      state.viewMode = "cards";
+      document.getElementById("view-cards-btn").classList.add("active");
+      document.getElementById("view-table-btn").classList.remove("active");
+      renderDocuments(getFilteredDocuments());
+    }});
 
     document.getElementById("search-input").addEventListener("input", e => {{
       state.query = e.target.value.trim();
+      state.page = 1;
       refreshAll();
     }});
     document.getElementById("status-filter").addEventListener("change", e => {{
       state.status = e.target.value;
+      state.page = 1;
       refreshAll();
     }});
     document.getElementById("priority-filter").addEventListener("change", e => {{
       state.priority = e.target.value;
+      state.page = 1;
       refreshAll();
     }});
     document.getElementById("type-filter").addEventListener("change", e => {{
       state.docType = e.target.value;
+      state.page = 1;
       refreshAll();
     }});
     document.getElementById("tech-filter").addEventListener("change", e => {{
       state.techArea = e.target.value;
+      state.page = 1;
       refreshAll();
     }});
     document.getElementById("clear-filters").addEventListener("click", clearAllFilters);
@@ -1376,7 +1970,6 @@ def render_github_pages_html(
       root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
     }});
 
-    initKPIs();
     initTechDropdown();
     computeGraphLayout();
     renderGraphLegend();

@@ -232,6 +232,12 @@ class ReadingListScaffoldTests(unittest.TestCase):
             )
             self.assertGreater(kg_data["summary"]["node_count"], 20)
             self.assertGreater(kg_data["summary"]["edge_count"], 40)
+            html_content = artifacts["index_html"].read_text(encoding="utf-8")
+            self.assertIn('id="slice-dimension-tabs"', html_content)
+            self.assertIn('id="breadcrumb-bar"', html_content)
+            self.assertIn('id="domain-cards-grid"', html_content)
+            self.assertIn('id="view-table-btn"', html_content)
+            self.assertIn('id="fullscreen-graph-btn"', html_content)
 
 
 if __name__ == "__main__":
