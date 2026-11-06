@@ -266,6 +266,26 @@ def render_github_pages_html(
       overflow: hidden;
       touch-action: none;
     }}
+    .panel.graph-fullscreen {{
+      position: fixed;
+      inset: 0.75rem;
+      z-index: 1000;
+      margin: 0;
+      width: calc(100vw - 1.5rem);
+      height: calc(100vh - 1.5rem);
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+    }}
+    .panel.graph-fullscreen #graph-container {{
+      flex: 1;
+      height: auto;
+      min-height: 0;
+    }}
+    body.has-fullscreen-graph {{
+      overflow: hidden;
+    }}
     [data-theme="light"] #graph-container {{
       background: #f1f5f9;
     }}
@@ -598,13 +618,14 @@ def render_github_pages_html(
     <section class="kpi-grid" id="kpi-grid"></section>
 
     <section class="dashboard-grid">
-      <div class="panel">
+      <div class="panel" id="graph-panel">
         <div class="panel-header">
           <div>
             <h2 class="panel-title">Interactive Knowledge Graph</h2>
             <div class="panel-subtitle">Click any node to filter related documents &bull; Drag nodes to rearrange &bull; Drag canvas or use +/- to pan/zoom</div>
           </div>
-          <div style="display:flex; gap:0.4rem;">
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button class="btn btn-sm" id="fullscreen-graph-btn" type="button" title="Toggle Full Web-Page View">&#x26F6; Full Page</button>
             <button class="btn btn-sm" id="relayout-graph-btn" type="button">Re-Layout</button>
             <button class="btn btn-sm" id="reset-graph-btn" type="button">Reset Filter</button>
           </div>
@@ -614,6 +635,7 @@ def render_github_pages_html(
             <button class="btn btn-sm" id="zoom-in-btn" type="button" title="Zoom In">+</button>
             <button class="btn btn-sm" id="zoom-out-btn" type="button" title="Zoom Out">&minus;</button>
             <button class="btn btn-sm" id="zoom-fit-btn" type="button" title="Reset View">Fit</button>
+            <button class="btn btn-sm" id="toolbar-fullscreen-btn" type="button" title="Toggle Full Web-Page View">&#x26F6;</button>
           </div>
           <svg id="kg-svg" viewBox="0 0 820 430" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="graph-status-banner" id="graph-status-banner" hidden>
@@ -1270,6 +1292,31 @@ def render_github_pages_html(
         updateViewBox();
         computeGraphLayout();
         drawGraph();
+      }});
+
+      function toggleGraphFullscreen(forceState) {{
+        const panel = document.getElementById("graph-panel");
+        const headerBtn = document.getElementById("fullscreen-graph-btn");
+        const toolbarBtn = document.getElementById("toolbar-fullscreen-btn");
+        const isFull = typeof forceState === "boolean"
+          ? forceState
+          : !panel.classList.contains("graph-fullscreen");
+        panel.classList.toggle("graph-fullscreen", isFull);
+        document.body.classList.toggle("has-fullscreen-graph", isFull);
+        headerBtn.innerHTML = isFull ? "&times; Normal View" : "&#x26F6; Full Page";
+        toolbarBtn.innerHTML = isFull ? "&times;" : "&#x26F6;";
+        toolbarBtn.title = isFull ? "Exit Full Web-Page View (Esc)" : "Expand to Full Web-Page View";
+      }}
+
+      document.getElementById("fullscreen-graph-btn").addEventListener("click", () => toggleGraphFullscreen());
+      document.getElementById("toolbar-fullscreen-btn").addEventListener("click", () => toggleGraphFullscreen());
+      document.addEventListener("keydown", e => {{
+        if (e.key === "Escape") {{
+          const panel = document.getElementById("graph-panel");
+          if (panel && panel.classList.contains("graph-fullscreen")) {{
+            toggleGraphFullscreen(false);
+          }}
+        }}
       }});
     }}
 
