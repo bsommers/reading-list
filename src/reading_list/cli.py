@@ -1,4 +1,4 @@
-"""Command-line entry point for quick document tracking, content classification, and knowledge-graph builds."""
+"""Command-line entry point for quick document tracking, content classification, research, and knowledge-graph builds."""
 
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ from reading_list.graph import (
     render_summary_markdown,
 )
 from reading_list.models import Document, DocumentRelation, SemanticChunk
+from reading_list.research import research_topic
 from reading_list.site import render_github_pages_html
 
 DEFAULT_FIXTURE = Path("tests/fixtures/seed_corpus.json")
@@ -187,11 +188,44 @@ def _print_classification_card(result: dict[str, Any], doc_id: str | None = None
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="reading-list",
-        description="Quick document tracker, semantic chunker, conceptual taxonomy classifier, and knowledge graph builder.",
+        description="Quick document tracker, research agent, semantic chunker, conceptual taxonomy classifier, and knowledge graph builder.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # 1. update (single command for steps 1, 2, 3: enrich, sync tracked corpus + README, rebuild all outputs)
+    # 1. research (discover papers on a topic, generate synthesis note, classify, and populate reading-db or local corpus)
+    res_p = sub.add_parser(
+        "research",
+        help="Research a technical topic, synthesize academic/technical papers, classify them into the taxonomy, and populate reading-db.",
+    )
+    res_p.add_argument(
+        "--topic",
+        required=True,
+        help="Research topic query (e.g., 'Formal verification languages in chip and semiconductor design').",
+    )
+    res_p.add_argument(
+        "--max-results",
+        type=int,
+        default=4,
+        help="Maximum number of primary papers to add alongside the synthesis note.",
+    )
+    res_p.add_argument(
+        "--db-dir",
+        type=Path,
+        default=DEFAULT_SISTER_DB,
+        help="Target reading-db directory to populate and rebuild (default: ../reading-db).",
+    )
+    res_p.add_argument(
+        "--local",
+        action="store_true",
+        help="Populate local input/corpus.json and output/ instead of ../reading-db.",
+    )
+    res_p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview discovered papers, synthesis note, and classifications without writing files.",
+    )
+
+    # 2. update (single command for steps 1, 2, 3: enrich, sync tracked corpus + README, rebuild all outputs)
     upd_p = sub.add_parser(
         "update",
         help="Single command to (1) enrich & classify corpus entries, (2) sync git-tracked seed_corpus.json & README.md, and (3) rebuild all output/ artifacts.",
@@ -201,7 +235,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     upd_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     upd_p.add_argument("--readme", type=Path, default=DEFAULT_README)
 
-    # 2. publish-db (enrich & publish artifacts + GitHub Pages site to the sister reading-db repo)
+    # 3. publish-db (enrich & publish artifacts + GitHub Pages site to the sister reading-db repo)
     pub_p = sub.add_parser(
         "publish-db",
         help="Enrich and build all knowledge-graph JSONs, Markdown reports, and the interactive GitHub Pages site into the sister reading-db repository.",
@@ -213,7 +247,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Path to the sister reading-db repository (default: ../reading-db).",
     )
 
-    # 3. sync (alias for update)
+    # 4. sync (alias for update)
     sync_p = sub.add_parser(
         "sync",
         help="Alias for 'update': enrich, sync input/corpus.json -> tests/fixtures/seed_corpus.json & README.md, and rebuild output/.",
@@ -223,7 +257,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sync_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     sync_p.add_argument("--readme", type=Path, default=DEFAULT_README)
 
-    # 4. seed-input
+    # 5. seed-input
     seed_p = sub.add_parser(
         "seed-input",
         help="Copy the tracked seed fixture corpus into input/corpus.json.",
@@ -231,7 +265,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     seed_p.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE)
     seed_p.add_argument("--output", type=Path, default=DEFAULT_CORPUS)
 
-    # 5. build
+    # 6. build
     build_p = sub.add_parser(
         "build",
         help="Generate semantic chunks, word cloud, taxonomy tree, knowledge graph, and GitHub Pages index.html.",
@@ -239,7 +273,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     build_p.add_argument("--input", type=Path, default=DEFAULT_FIXTURE)
     build_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
 
-    # 6. classify (ad-hoc content / snippet / file classification)
+    # 7. classify (ad-hoc content / snippet / file classification)
     cls_p = sub.add_parser(
         "classify",
         help="Quickly classify a text snippet, abstract, or file without modifying the corpus.",
@@ -249,7 +283,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     cls_p.add_argument("--file", type=Path, help="Path to a text/markdown file to classify.")
     cls_p.add_argument("--json", action="store_true", help="Output raw JSON classification.")
 
-    # 7. add (track & classify a new document into corpus and run the full update pipeline)
+    # 8. add (track & classify a new document into corpus and run the full update pipeline)
     add_p = sub.add_parser(
         "add",
         help="Track, enrich, and classify a new article, paper, or note into the reading list and sync the repo.",
@@ -294,7 +328,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     add_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT, help="Output directory to rebuild.")
 
-    # 8. list (inspect & filter tracked reading list)
+    # 9. list (inspect & filter tracked reading list)
     list_p = sub.add_parser(
         "list",
         help="List and filter tracked documents by status, priority, taxonomy category, concept, or keyword.",
@@ -308,7 +342,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     list_p.add_argument("--concept", default="", help="Substring filter on concept ID or label.")
     list_p.add_argument("--query", default="", help="Full-text keyword filter across title, content, and notes.")
 
-    # 9. status (update tracking status/priority/notes on an existing document)
+    # 10. status (update tracking status/priority/notes on an existing document)
     stat_p = sub.add_parser(
         "status",
         help="Update reading status, priority, tags, or notes for a tracked document.",
@@ -337,6 +371,58 @@ def main(argv: Sequence[str] | None = None) -> int:
     stat_p.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT, help="Output directory to rebuild.")
 
     args = parser.parse_args(argv)
+
+    if args.command == "research":
+        if args.local:
+            target_corpus = ensure_corpus_file(DEFAULT_CORPUS, DEFAULT_FIXTURE)
+            target_out = DEFAULT_OUTPUT
+            target_readme = DEFAULT_README
+        else:
+            db_dir = args.db_dir
+            target_corpus = db_dir / "corpus.json"
+            target_out = db_dir
+            target_readme = db_dir / "README.md"
+            ensure_corpus_file(target_corpus, DEFAULT_FIXTURE)
+
+        existing_docs = load_corpus(target_corpus) if target_corpus.exists() else load_corpus(DEFAULT_FIXTURE)
+        bundle = research_topic(
+            topic=args.topic,
+            existing_docs=existing_docs,
+            max_results=args.max_results,
+        )
+
+        print(f"=== Research Report: {args.topic!r} ===")
+        print(f"Discovered {len(bundle['discovered_documents'])} primary papers + 1 synthesis note:")
+        for doc in bundle["all_documents"]:
+            cls_info = bundle["classifications"][doc.doc_id]
+            _print_classification_card(cls_info, doc_id=doc.doc_id)
+
+        if args.dry_run:
+            print("[dry-run] No files modified.")
+            return 0
+
+        new_by_id = {d.doc_id: d for d in bundle["all_documents"]}
+        merged_docs: list[Document] = []
+        seen: set[str] = set()
+        for doc in existing_docs:
+            if doc.doc_id in new_by_id:
+                merged_docs.append(new_by_id[doc.doc_id])
+                seen.add(doc.doc_id)
+            else:
+                merged_docs.append(doc)
+        for doc in bundle["all_documents"]:
+            if doc.doc_id not in seen:
+                merged_docs.append(doc)
+                seen.add(doc.doc_id)
+
+        save_corpus(target_corpus, merged_docs)
+        if target_readme.exists():
+            sync_readme_corpus_section(target_readme, merged_docs)
+        artifacts = run_build(target_corpus, target_out)
+        print(f"[populated] {target_corpus} (total documents: {len(merged_docs)})")
+        for name, path in artifacts.items():
+            print(f"  [ok] {name}: {path}")
+        return 0
 
     if args.command == "seed-input":
         args.output.parent.mkdir(parents=True, exist_ok=True)

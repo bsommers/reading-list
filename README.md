@@ -1,15 +1,15 @@
 # Reading List (`reading-list`)
 
-Core Python tooling, semantic chunker, conceptual taxonomy classifier, word-cloud indexer, and OntoLogic-ready knowledge graph builder.
+Core Python tooling, research agent, semantic chunker, conceptual taxonomy classifier, word-cloud indexer, and OntoLogic-ready knowledge graph builder.
 
-- **This Repository (`reading-list`):** Houses the indexing, classification, and static-site generation engine with a minimal 2-document seed corpus to demonstrate the pipeline.
+- **This Repository (`reading-list`):** Houses the indexing, topic research, classification, and static-site generation engine with a minimal 2-document seed corpus to demonstrate the pipeline.
 - **Published Database & GitHub Pages (`reading-db`):** The populated reading database, generated JSON-LD knowledge graph, and interactive GitHub Pages dashboard live in the sister repository: **[`bsommers/reading-db`](https://github.com/bsommers/reading-db)** (**[Live GitHub Pages Dashboard](https://bsommers.github.io/reading-db/)**).
 
 ## Repository Layout
 
 | Path | Holds | Git |
 |---|---|---|
-| `src/reading_list/` | Importable Python package (`models`, `taxonomy`, `chunker`, `graph`, `enrich`, `site`, `cli`) | tracked |
+| `src/reading_list/` | Importable Python package (`models`, `taxonomy`, `chunker`, `graph`, `enrich`, `research`, `site`, `cli`) | tracked |
 | `tests/` | Unit/smoke tests (`test_smoke.py`) and minimal demo corpus (`fixtures/seed_corpus.json`) | tracked |
 | `docs/` | Architecture (`architecture.md`), OntoLogic roadmap, and ADRs (`docs/adr/`) | tracked |
 | `input/` | Local working corpus manifest (`corpus.json`) | ignored except `README.md` |
@@ -21,15 +21,16 @@ Core Python tooling, semantic chunker, conceptual taxonomy classifier, word-clou
 1. **Technical Article:** [*On-Chip Monitors Detect Bit-Flip Attacks in AI Accelerators (UF, UT Dallas, RPI)*](https://semiengineering.com/on-chip-monitors-detect-bit-flip-attacks-in-ai-accelerators-uf-ut-dallas-rpi/) (`semieng-2026-bare-ai-monitors` — Semiconductor Engineering Staff — University of Florida; University of Texas at Dallas; Rensselaer Polytechnic Institute)
 2. **Academic Paper:** [*BARE-AI: Bit-Flip Attack Resilience in AI Hardware through Built-in Performance Monitors*](https://arxiv.org/abs/2610.08739v2) (`arxiv-2610.08739v2` — Habibur Rahaman, Swastik Bhattacharya, Sanjay Das, Kanad Basu, Swarup Bhunia — University of Florida; University of Texas at Dallas; Rensselaer Polytechnic Institute)
 
-## Quickstart: Tooling & Publishing to `../reading-db`
+## Quickstart: Tooling, Topic Research & Publishing to `../reading-db`
 
 ```bash
 # 1. Run the verification test suite
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 
-# 2. Seed and run the single-command local update pipeline
-PYTHONPATH=src python3 -m reading_list.cli seed-input
-PYTHONPATH=src python3 -m reading_list.cli update
+# 2. Research a topic and populate ../reading-db (adds primary papers + synthesis note & rebuilds site)
+PYTHONPATH=src python3 -m reading_list.cli research \
+  --topic "Formal verification languages in chip and semiconductor design" \
+  --db-dir ../reading-db
 
 # 3. Publish enriched corpus, knowledge graph JSONs, and interactive GitHub Pages site to ../reading-db
 PYTHONPATH=src python3 -m reading_list.cli publish-db --db-dir ../reading-db
@@ -52,4 +53,4 @@ PYTHONPATH=src python3 -m reading_list.cli add \
 
 ## Status
 
-Tooling (`add`, `list`, `status`, `update`, `publish-db`, `classify`), semantic chunker, conceptual taxonomy classifier, and GitHub Pages generator operational (`v0.1.0`).
+Tooling (`research`, `add`, `list`, `status`, `update`, `publish-db`, `classify`), semantic chunker, conceptual taxonomy classifier, and GitHub Pages generator operational (`v0.1.0`).

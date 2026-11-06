@@ -194,6 +194,33 @@ class ReadingListScaffoldTests(unittest.TestCase):
                 "Compare with BARE-AI APC overhead.",
             )
 
+    def test_research_command_populates_reading_db(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_dir = Path(tmp) / "reading-db"
+            db_dir.mkdir(parents=True)
+            shutil.copyfile(FIXTURE_PATH, db_dir / "corpus.json")
+            shutil.copyfile(README_PATH, db_dir / "README.md")
+
+            rc = main(
+                [
+                    "research",
+                    "--topic",
+                    "Formal verification languages in chip and semiconductor design",
+                    "--db-dir",
+                    str(db_dir),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            docs = load_corpus(db_dir / "corpus.json")
+            doc_ids = {d.doc_id for d in docs}
+            self.assertIn("arxiv-2208.03699", doc_ids)
+            self.assertIn("arxiv-2503.19174", doc_ids)
+            self.assertIn("arxiv-2604.23100", doc_ids)
+            self.assertIn("arxiv-2609.26751", doc_ids)
+            self.assertIn("research-formal-verification-languages-in-chip-and-se", doc_ids)
+            self.assertTrue((db_dir / "index.html").exists())
+            self.assertTrue((db_dir / "knowledge_graph.json").exists())
+
     def test_cli_build_end_to_end(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp)
