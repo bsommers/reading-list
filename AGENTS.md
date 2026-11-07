@@ -5,6 +5,7 @@
 - **Research a topic & add to specified DB:** `python3 -m reading_list.cli research -d ../reading-db -t "SAT and SMT solvers applications in software development, graph analysis, and ontologies" add`
 - **Add & classify a paper/article/note into specified DB:** `python3 -m reading_list.cli add -d ../reading-db --title "..." --type academic_paper --url "..." --text "..." --cites arxiv-2610.08739v2 --priority high`
 - **Publish `../reading-db` knowledge graph & GitHub Pages site:** `python3 -m reading_list.cli publish-db -d ../reading-db`
+- **Import `kitsumiko/papers` into sibling `../ai-curriculum-db`:** `python3 -m reading_list.cli import-curriculum --source <kitsumiko-papers-dir> -d ../ai-curriculum-db`
 - **Single-command full update (enrich, sync tracked corpus & README, rebuild `output/` or `-d <db>`):** `python3 -m reading_list.cli update [-d ../reading-db]`
 - **Run unit & smoke tests:** `PYTHONPATH=src python3 -m unittest discover -s tests -v`
 - **Quickly classify text/abstracts on the fly:** `python3 -m reading_list.cli classify --title "..." --text "..."`

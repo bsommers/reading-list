@@ -39,6 +39,11 @@ from reading_list.graph import (
     build_taxonomy_index,
     render_summary_markdown,
 )
+from reading_list.kitsumiko import (
+    build_kitsumiko_corpus,
+    copy_upstream_reference_files,
+    write_curriculum_db_readme,
+)
 from reading_list.models import Document, DocumentRelation, SemanticChunk
 from reading_list.research import research_topic
 from reading_list.site import render_github_pages_html
@@ -61,6 +66,7 @@ PRIMARY_COMMANDS = {
     "list",
     "status",
     "seed-input",
+    "import-curriculum",
 }
 
 CHAINABLE_SUBCOMMANDS = {
@@ -733,6 +739,21 @@ def build_parser() -> argparse.ArgumentParser:
     _add_shared_db_switches(stat_p, default_db=None)
     stat_p.add_argument("extra", nargs="*", help="Optional chained subcommand(s).")
 
+    # 10. import-curriculum
+    imp_p = sub.add_parser(
+        "import-curriculum",
+        help="Import a kitsumiko/papers checkout into a sibling reading database (default: ../ai-curriculum-db).",
+    )
+    imp_p.add_argument(
+        "-s",
+        "--source",
+        type=Path,
+        required=True,
+        help="Path to local clone of kitsumiko/papers.",
+    )
+    _add_shared_db_switches(imp_p, default_db=Path("../ai-curriculum-db"))
+    imp_p.add_argument("extra", nargs="*", help="Optional chained subcommand(s) (e.g., 'push').")
+
     return parser
 
 
@@ -777,6 +798,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(args.fixture, args.output)
         print(f"Seeded input corpus at {args.output}")
+        return 0
+
+    if args.command == "import-curriculum":
+        corpus_path, output_dir, _, _, _ = resolve_database_targets(
+            args, default_to_sister_db=False
+        )
+        output_dir.mkdir(parents=True, exist_ok=True)
+        docs = build_kitsumiko_corpus(args.source)
+        if args.dry_run:
+            print(f"[dry-run] Parsed {len(docs)} documents from {args.source}")
+            return 0
+        copy_upstream_reference_files(args.source, output_dir)
+        save_corpus(corpus_path, docs)
+        write_curriculum_db_readme(output_dir, docs)
+        artifacts = run_build(corpus_path, output_dir)
+        print(f"[imported] {len(docs)} documents into {output_dir} from {args.source}")
+        for name, path in artifacts.items():
+            print(f"  [ok] {name}: {path}")
+        if "push" in subcommands or getattr(args, "push", False):
+            _git_commit_and_push_db(output_dir, "feat(curriculum): sync kitsumiko/papers knowledge graph")
         return 0
 
     if args.command in {"publish-db", "publish"}:

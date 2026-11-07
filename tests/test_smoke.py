@@ -318,6 +318,47 @@ class ReadingListScaffoldTests(unittest.TestCase):
             self.assertIn('id="view-table-btn"', html_content)
             self.assertIn('id="fullscreen-graph-btn"', html_content)
 
+    def test_kitsumiko_curriculum_import(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            mock_src = tmp_path / "kitsumiko-papers"
+            (mock_src / "learning").mkdir(parents=True)
+            (mock_src / "LICENSE").write_text("Apache License 2.0\n", encoding="utf-8")
+            (mock_src / "learning-path.md").write_text("# Learning Path\n", encoding="utf-8")
+            (mock_src / "by-date.md").write_text(
+                "# Papers by Publication Date\n\n## 2026\n\n### 2026.05\n"
+                "- [Lattice Deduction Transformers](https://arxiv.org/abs/2605.08605) (Davis et al., 2026) — [Architectures](learning/architectures.md)\n",
+                encoding="utf-8",
+            )
+            (mock_src / "learning" / "architectures.md").write_text(
+                "# Novel Architectures & Theory\n\n"
+                "**Overview**: Explores alternative architectures.\n\n"
+                "## Alternative Architectures\n"
+                "**Goal**: Explore beyond standard transformers\n\n"
+                "1. [Lattice Deduction Transformers](https://arxiv.org/abs/2605.08605) (Davis et al., 2026)\n"
+                "   - *Why*: **Recurrent transformer with sound deduction guarantees** - projects latent state onto an abstract lattice.\n",
+                encoding="utf-8",
+            )
+            target_db = tmp_path / "ai-curriculum-db"
+            rc = main(
+                [
+                    "import-curriculum",
+                    "--source",
+                    str(mock_src),
+                    "-d",
+                    str(target_db),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            docs = load_corpus(target_db / "corpus.json")
+            doc_ids = {d.doc_id for d in docs}
+            self.assertIn("arxiv-2605.08605", doc_ids)
+            self.assertIn("curriculum-area-architectures", doc_ids)
+            self.assertIn("curriculum-kitsumiko-master-path", doc_ids)
+            self.assertTrue((target_db / "NOTICE.md").exists())
+            self.assertTrue((target_db / "LICENSE").exists())
+            self.assertTrue((target_db / "index.html").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

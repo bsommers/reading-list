@@ -3,7 +3,8 @@
 Core Python tooling, research agent, semantic chunker, conceptual taxonomy classifier, word-cloud indexer, and OntoLogic-ready knowledge graph builder.
 
 - **This Repository (`reading-list`):** Houses the indexing, topic research, classification, and static-site generation engine with a minimal 2-document seed corpus to demonstrate the pipeline.
-- **Published Database & GitHub Pages (`reading-db`):** The populated reading database, generated JSON-LD knowledge graph, and interactive GitHub Pages dashboard live in the sister repository: **[`bsommers/reading-db`](https://github.com/bsommers/reading-db)** (**[Live GitHub Pages Dashboard](https://bsommers.github.io/reading-db/)**).
+- **Focused Research Database & GitHub Pages (`reading-db`):** The hardware security, RTL formal verification, and SAT/SMT OntoLogic reading database lives in the sister repository: **[`bsommers/reading-db`](https://github.com/bsommers/reading-db)** (**[Live GitHub Pages Dashboard](https://bsommers.github.io/reading-db/)**).
+- **AI/ML Curriculum Database & GitHub Pages (`ai-curriculum-db`):** The full 320-paper AI/ML Research Curriculum knowledge graph adapted from [`kitsumiko/papers`](https://github.com/kitsumiko/papers) lives in the sibling repository: **[`bsommers/ai-curriculum-db`](https://github.com/bsommers/ai-curriculum-db)** (**[Live GitHub Pages Dashboard](https://bsommers.github.io/ai-curriculum-db/)**).
 
 ## Repository Layout
 
