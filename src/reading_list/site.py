@@ -89,6 +89,22 @@ def render_github_pages_html(
       --accent-3: #059669;
       --shadow: 0 10px 26px -10px rgba(15, 23, 42, 0.1);
     }}
+    [data-theme="tron"] {{
+      --bg: #020813;
+      --bg-elevated: rgba(3, 14, 30, 0.9);
+      --bg-card: rgba(4, 18, 38, 0.92);
+      --bg-chip: rgba(0, 240, 255, 0.14);
+      --border: rgba(0, 240, 255, 0.34);
+      --border-strong: #00f0ff;
+      --text: #e2fbff;
+      --text-muted: #5ec2e8;
+      --accent: #00f0ff;
+      --accent-2: #0088ff;
+      --accent-3: #00ffaa;
+      --accent-warn: #ff9e00;
+      --accent-danger: #ff2a6d;
+      --shadow: 0 0 22px rgba(0, 240, 255, 0.18), inset 0 0 14px rgba(0, 240, 255, 0.07);
+    }}
     * {{
       box-sizing: border-box;
     }}
@@ -102,6 +118,34 @@ def render_github_pages_html(
       color: var(--text);
       line-height: 1.5;
       min-height: 100vh;
+    }}
+    [data-theme="tron"] body {{
+      background-color: #020813;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.22), transparent 55%),
+        radial-gradient(circle at 85% 20%, rgba(0, 136, 255, 0.18), transparent 45%),
+        linear-gradient(rgba(0, 240, 255, 0.075) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.075) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      background-attachment: fixed;
+    }}
+    [data-theme="tron"] header.hero,
+    [data-theme="tron"] .panel,
+    [data-theme="tron"] .navigator-panel,
+    [data-theme="tron"] .kpi-card,
+    [data-theme="tron"] .filter-bar,
+    [data-theme="tron"] .synoptic-table-wrap,
+    [data-theme="tron"] .doc-card {{
+      border-color: rgba(0, 240, 255, 0.38);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.14), inset 0 0 12px rgba(0, 240, 255, 0.05);
+    }}
+    [data-theme="tron"] h1,
+    [data-theme="tron"] .kpi-value,
+    [data-theme="tron"] .brand-eyebrow {{
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.55);
+    }}
+    [data-theme="tron"] #kg-svg .kg-node circle {{
+      filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.75));
     }}
     a {{
       color: var(--accent);
@@ -195,24 +239,77 @@ def render_github_pages_html(
       color: #fff;
       border: none;
     }}
+    .theme-group {{
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0.18rem;
+      gap: 0.2rem;
+    }}
+    .theme-opt {{
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 0.28rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }}
+    .theme-opt:hover {{
+      color: var(--accent);
+    }}
+    .theme-opt.active {{
+      background: var(--bg-card);
+      color: var(--accent);
+      border-color: var(--border-strong);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }}
+    .theme-opt[data-set-theme="tron"].active {{
+      color: #00f0ff;
+      border-color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.75);
+    }}
     .kpi-grid {{
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
       gap: 0.75rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }}
     .kpi-card {{
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 0.75rem 1rem;
+      padding: 0.75rem 0.95rem;
       box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.48rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }}
+    .kpi-card:hover, .kpi-card.active {{
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }}
+    .kpi-card.active {{
+      background: var(--bg-chip);
+      box-shadow: inset 0 0 0 1px var(--accent), var(--shadow);
+    }}
+    .kpi-top {{
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      gap: 0.5rem;
     }}
     .kpi-value {{
-      font-size: 1.45rem;
+      font-size: 1.4rem;
       font-weight: 800;
       font-family: var(--font-mono);
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -220,10 +317,78 @@ def render_github_pages_html(
       -webkit-text-fill-color: transparent;
     }}
     .kpi-label {{
-      font-size: 0.73rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      font-weight: 700;
+    }}
+    .kpi-section-link {{
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }}
+    .kpi-doc-links {{
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+      border-top: 1px solid var(--border);
+      padding-top: 0.42rem;
+    }}
+    .kpi-doc-link {{
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      transition: all 0.12s ease;
+    }}
+    .kpi-doc-link:hover {{
+      background: var(--bg-chip);
+      color: var(--accent);
+      text-decoration: none;
+    }}
+    .kpi-drawer {{
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 0.95rem 1.15rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }}
+    .kpi-drawer[hidden] {{
+      display: none !important;
+    }}
+    .kpi-drawer-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 0.55rem;
+      max-height: 270px;
+      overflow-y: auto;
+      margin-top: 0.65rem;
+      padding-right: 0.25rem;
+    }}
+    .kpi-drawer-item {{
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(2, 6, 23, 0.22);
+      font-size: 0.77rem;
+    }}
+    [data-theme="light"] .kpi-drawer-item {{
+      background: #f8fafc;
+    }}
+    .kpi-drawer-item:hover {{
+      border-color: var(--accent);
     }}
 
     /* Synoptic Domain & Slice Navigator */
@@ -810,15 +975,21 @@ def render_github_pages_html(
         </p>
       </div>
       <div class="hero-actions">
-        <a class="btn" href="knowledge_graph.json" target="_blank" rel="noopener">JSON-LD</a>
-        <a class="btn" href="taxonomy_tree.json" target="_blank" rel="noopener">Taxonomy</a>
-        <a class="btn" href="chunks.json" target="_blank" rel="noopener">Chunks</a>
-        <a class="btn" href="summary.md" target="_blank" rel="noopener">Summary MD</a>
-        <button class="btn btn-primary" id="theme-toggle" type="button">Theme</button>
+        <a class="btn" href="knowledge_graph.json" target="_blank" rel="noopener" title="Raw OntoLogic JSON-LD Property Graph">JSON-LD</a>
+        <a class="btn" href="taxonomy.html" id="hero-taxonomy-btn" title="Rendered Conceptual Taxonomy Markdown &amp; Raw JSON">Taxonomy</a>
+        <a class="btn" href="chunks.html" id="hero-chunks-btn" title="Rendered Semantic Chunks Markdown &amp; Raw JSON">Chunks</a>
+        <a class="btn" href="summary.html" id="hero-summary-btn" title="Rendered Executive Summary Markdown &amp; Raw MD">Summary MD</a>
+        <div class="theme-group" role="group" aria-label="Theme Selector">
+          <button class="theme-opt active" type="button" data-set-theme="dark" title="Midnight Dark Theme">Dark</button>
+          <button class="theme-opt" type="button" data-set-theme="tron" title="Neon-Blue TRON Cyber Grid Theme">&#x26A1; TRON</button>
+          <button class="theme-opt" type="button" data-set-theme="light" title="Daylight Theme">Light</button>
+        </div>
+        <button class="btn btn-primary" id="theme-toggle" type="button" title="Cycle Theme (Dark / TRON / Light)">Theme</button>
       </div>
     </header>
 
     <section class="kpi-grid" id="kpi-grid"></section>
+    <section class="kpi-drawer" id="kpi-linked-drawer" hidden></section>
 
     <!-- Synoptic Top-Level Domain & Slice Selector with Breadcrumb Drill-Down -->
     <section class="navigator-panel">
@@ -868,7 +1039,7 @@ def render_github_pages_html(
         <div class="graph-legend" id="graph-legend"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel" id="word-cloud-panel">
         <div class="panel-header">
           <div>
             <h2 class="panel-title">Scoped Word Cloud &amp; Sub-Hierarchy</h2>
@@ -954,6 +1125,7 @@ def render_github_pages_html(
       selectedGraphNodeId: "",
       hiddenNodeTypes: new Set(),
       viewMode: "table", // "table" (synoptic default) | "cards"
+      activeKpiDrawer: "", // "" | "docs" | "chunks" | "concepts" | "taxonomy" | "nodes" | "edges"
       page: 1,
       pageSize: 8
     }};
@@ -994,6 +1166,25 @@ def render_github_pages_html(
       }});
     }}
 
+    function focusDocumentInSection(docId, sectionId, openModal = false) {{
+      if (docId) {{
+        const idx = DB.documents.findIndex(d => d.doc_id === docId);
+        if (idx >= 0) {{
+          state.docId = docId;
+          state.selectedGraphNodeId = `doc:${{docId}}`;
+          state.page = 1;
+          refreshAll();
+        }}
+      }}
+      if (openModal && docId) {{
+        openChunkModal(docId);
+      }}
+      const targetEl = document.getElementById(sectionId || "doc-results-container");
+      if (targetEl) {{
+        targetEl.scrollIntoView({{ behavior: "smooth", block: "start" }});
+      }}
+    }}
+
     function renderKPIs(filteredDocs) {{
       const kpiGrid = document.getElementById("kpi-grid");
       const totalChunks = filteredDocs.reduce((acc, d) => acc + d.chunks.length, 0);
@@ -1004,20 +1195,317 @@ def render_github_pages_html(
 
       const isScoped = filteredDocs.length !== DB.documents.length;
       const suffix = isScoped ? ` / ${{DB.documents.length}}` : "";
+
+      const chunkSortedDocs = [...filteredDocs].sort((a, b) => b.chunks.length - a.chunks.length);
+      const conceptDocs = filteredDocs.filter(d => d.concept_ids.length > 0);
+      const taxDocs = filteredDocs.filter(d => d.taxonomy_paths.length > 0);
+      const edgeConnectedDocs = filteredDocs.filter(d => (d.relations && d.relations.length > 0));
+      const fallbackEdgeDocs = edgeConnectedDocs.length ? edgeConnectedDocs : filteredDocs;
+
       const kpis = [
-        {{ label: "Scoped Documents", value: `${{filteredDocs.length}}${{suffix}}` }},
-        {{ label: "Semantic Chunks", value: totalChunks }},
-        {{ label: "Active Concepts", value: activeConcepts.size }},
-        {{ label: "Taxonomy Nodes", value: activeTax.size }},
-        {{ label: "Total Graph Nodes", value: DB.knowledge_graph.summary.node_count }},
-        {{ label: "Total Graph Edges", value: DB.knowledge_graph.summary.edge_count }}
+        {{
+          key: "docs",
+          label: "Scoped Documents",
+          value: `${{filteredDocs.length}}${{suffix}}`,
+          sectionId: "doc-results-container",
+          sectionLabel: "Document Catalog ↓",
+          pageHref: "summary.html",
+          docs: filteredDocs.slice(0, 3),
+          openChunksOnDocClick: false
+        }},
+        {{
+          key: "chunks",
+          label: "Semantic Chunks",
+          value: totalChunks,
+          sectionId: "doc-results-container",
+          sectionLabel: "Chunks MD ↗",
+          pageHref: "chunks.html",
+          docs: chunkSortedDocs.slice(0, 3),
+          openChunksOnDocClick: true
+        }},
+        {{
+          key: "concepts",
+          label: "Active Concepts",
+          value: activeConcepts.size,
+          sectionId: "word-cloud-panel",
+          sectionLabel: "Word Cloud & Concepts ↓",
+          pageHref: "taxonomy.html",
+          docs: (conceptDocs.length ? conceptDocs : filteredDocs).slice(0, 3),
+          openChunksOnDocClick: false
+        }},
+        {{
+          key: "taxonomy",
+          label: "Taxonomy Nodes",
+          value: activeTax.size,
+          sectionId: "taxonomy-list",
+          sectionLabel: "Taxonomy MD ↗",
+          pageHref: "taxonomy.html",
+          docs: (taxDocs.length ? taxDocs : filteredDocs).slice(0, 3),
+          openChunksOnDocClick: false
+        }},
+        {{
+          key: "nodes",
+          label: "Total Graph Nodes",
+          value: DB.knowledge_graph.summary.node_count,
+          sectionId: "graph-panel",
+          sectionLabel: "Knowledge Graph ↓",
+          pageHref: "knowledge_graph.json",
+          docs: filteredDocs.slice(0, 3),
+          openChunksOnDocClick: false
+        }},
+        {{
+          key: "edges",
+          label: "Total Graph Edges",
+          value: DB.knowledge_graph.summary.edge_count,
+          sectionId: "graph-panel",
+          sectionLabel: "Graph Edges ↓",
+          pageHref: "summary.html",
+          docs: fallbackEdgeDocs.slice(0, 3),
+          openChunksOnDocClick: false
+        }}
       ];
-      kpiGrid.innerHTML = kpis.map(k => `
-        <div class="kpi-card">
-          <div class="kpi-label">${{k.label}}</div>
-          <div class="kpi-value">${{k.value}}</div>
+
+      kpiGrid.innerHTML = kpis.map(k => {{
+        const isActive = state.activeKpiDrawer === k.key ? "active" : "";
+        const docLinksHtml = k.docs.map(d => {{
+          const shortTitle = d.title.length > 28 ? d.title.slice(0, 26) + "…" : d.title;
+          return `<a href="#${{k.sectionId}}" class="kpi-doc-link" data-doc-id="${{escapeHtml(d.doc_id)}}" data-sec="${{k.sectionId}}" data-open-chunks="${{k.openChunksOnDocClick ? "1" : "0"}}" title="${{escapeHtml(d.title)}} (${{escapeHtml(d.doc_id)}})">&rarr; ${{escapeHtml(d.doc_id)}}: ${{escapeHtml(shortTitle)}}</a>`;
+        }}).join("");
+        const moreCount = Math.max(0, filteredDocs.length - k.docs.length);
+        return `
+          <div class="kpi-card ${{isActive}}" data-kpi-key="${{k.key}}" data-sec="${{k.sectionId}}">
+            <div>
+              <div class="kpi-top">
+                <div class="kpi-label">${{k.label}}</div>
+                <div class="kpi-value">${{k.value}}</div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.15rem;">
+                <a href="#${{k.sectionId}}" class="kpi-section-link kpi-sec-jump" data-sec="${{k.sectionId}}">${{k.sectionLabel}}</a>
+                <a href="${{k.pageHref}}" class="kpi-section-link" style="color:var(--accent-2);" onclick="event.stopPropagation()">Page &nearr;</a>
+              </div>
+            </div>
+            <div class="kpi-doc-links">
+              ${{docLinksHtml || `<span class="kpi-doc-link">No matching docs</span>`}}
+              <span class="kpi-section-link" style="margin-top:0.1rem;">${{state.activeKpiDrawer === k.key ? "Hide linked list &▴;" : `Browse all (${{moreCount > 0 ? `+${{moreCount}} more` : filteredDocs.length}}) &▾;`}}</span>
+            </div>
+          </div>
+        `;
+      }}).join("");
+
+      kpiGrid.querySelectorAll(".kpi-doc-link[data-doc-id]").forEach(link => {{
+        link.addEventListener("click", e => {{
+          e.preventDefault();
+          e.stopPropagation();
+          const docId = link.dataset.docId;
+          const secId = link.dataset.sec;
+          const openChunks = link.dataset.openChunks === "1";
+          focusDocumentInSection(docId, secId, openChunks);
+        }});
+      }});
+
+      kpiGrid.querySelectorAll(".kpi-sec-jump").forEach(jump => {{
+        jump.addEventListener("click", e => {{
+          e.preventDefault();
+          e.stopPropagation();
+          const secEl = document.getElementById(jump.dataset.sec);
+          if (secEl) secEl.scrollIntoView({{ behavior: "smooth", block: "start" }});
+        }});
+      }});
+
+      kpiGrid.querySelectorAll(".kpi-card").forEach(card => {{
+        card.addEventListener("click", () => {{
+          const kKey = card.dataset.kpiKey;
+          state.activeKpiDrawer = state.activeKpiDrawer === kKey ? "" : kKey;
+          renderKPIs(filteredDocs);
+          renderKpiDrawer(filteredDocs);
+        }});
+      }});
+
+      renderKpiDrawer(filteredDocs);
+    }}
+
+    function renderKpiDrawer(filteredDocs) {{
+      const drawer = document.getElementById("kpi-linked-drawer");
+      if (!drawer) return;
+      if (!state.activeKpiDrawer) {{
+        drawer.hidden = true;
+        drawer.innerHTML = "";
+        return;
+      }}
+      drawer.hidden = false;
+      const kKey = state.activeKpiDrawer;
+      let headerTitle = "";
+      let sectionId = "doc-results-container";
+      let pageUrl = "summary.html";
+      let pageLabel = "Open Rendered Summary MD";
+      let itemsHtml = "";
+
+      if (kKey === "docs") {{
+        headerTitle = `Scoped Documents (${{filteredDocs.length}} Linked Documents)`;
+        sectionId = "doc-results-container";
+        pageUrl = "summary.html";
+        pageLabel = "Open Summary MD Page";
+        itemsHtml = filteredDocs.slice(0, 48).map(d => `
+          <div class="kpi-drawer-item">
+            <div style="display:flex; justify-content:space-between; gap:0.4rem;">
+              <a href="#doc-results-container" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="doc-results-container" style="font-weight:700;">${{escapeHtml(d.title)}}</a>
+              <span class="badge status-${{escapeHtml(d.reading_status)}}">${{escapeHtml(d.reading_status)}}</span>
+            </div>
+            <div class="doc-meta">${{escapeHtml(d.doc_id)}} &bull; ${{escapeHtml(d.doc_type.replace("_", " "))}} &bull; <a href="#graph-panel" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="graph-panel">View in Graph &rarr;</a></div>
+          </div>
+        `).join("");
+      }} else if (kKey === "chunks") {{
+        const totalChunks = filteredDocs.reduce((acc, d) => acc + d.chunks.length, 0);
+        headerTitle = `Semantic Chunks (${{totalChunks}} Chunks across ${{filteredDocs.length}} Documents)`;
+        sectionId = "doc-results-container";
+        pageUrl = "chunks.html";
+        pageLabel = "Open Rendered Chunks MD Page";
+        itemsHtml = filteredDocs.slice(0, 48).map(d => `
+          <div class="kpi-drawer-item">
+            <div style="display:flex; justify-content:space-between; gap:0.4rem;">
+              <a href="#doc-results-container" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="doc-results-container" data-chunks="1" style="font-weight:700;">${{escapeHtml(d.title)}}</a>
+              <span class="badge">${{d.chunks.length}} chunks</span>
+            </div>
+            <div class="doc-meta">
+              ${{d.chunks.slice(0, 3).map(c => `<a href="chunks.html" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="doc-results-container" data-chunks="1" style="margin-right:0.4rem;">[${{escapeHtml(c.heading)}}]</a>`).join("")}}
+            </div>
+          </div>
+        `).join("");
+      }} else if (kKey === "concepts") {{
+        const conceptMap = new Map();
+        filteredDocs.forEach(d => {{
+          d.concept_ids.forEach(cid => {{
+            if (!conceptMap.has(cid)) conceptMap.set(cid, []);
+            conceptMap.get(cid).push(d);
+          }});
+        }});
+        headerTitle = `Active Concepts (${{conceptMap.size}} Concepts with Linked Documents)`;
+        sectionId = "word-cloud-panel";
+        pageUrl = "taxonomy.html";
+        pageLabel = "Open Taxonomy & Concepts MD Page";
+        itemsHtml = [...conceptMap.entries()].map(([cid, docs]) => `
+          <div class="kpi-drawer-item">
+            <div style="display:flex; justify-content:space-between; gap:0.4rem;">
+              <a href="#word-cloud-panel" class="kpi-drawer-concept-jump" data-concept="${{escapeHtml(cid)}}" style="font-weight:700;">${{escapeHtml(cid.replace("concept:", ""))}}</a>
+              <span class="badge">${{docs.length}} linked docs</span>
+            </div>
+            <div class="doc-meta">
+              ${{docs.slice(0, 4).map(d => `<a href="#doc-results-container" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="doc-results-container" style="margin-right:0.45rem;">&rarr; ${{escapeHtml(d.doc_id)}}</a>`).join("")}}
+            </div>
+          </div>
+        `).join("");
+      }} else if (kKey === "taxonomy") {{
+        const taxMap = new Map();
+        filteredDocs.forEach(d => {{
+          d.taxonomy_paths.forEach(tp => {{
+            if (!taxMap.has(tp)) taxMap.set(tp, []);
+            taxMap.get(tp).push(d);
+          }});
+        }});
+        headerTitle = `Taxonomy Nodes (${{taxMap.size}} Categories with Linked Documents)`;
+        sectionId = "taxonomy-list";
+        pageUrl = "taxonomy.html";
+        pageLabel = "Open Rendered Taxonomy MD Page";
+        itemsHtml = [...taxMap.entries()].map(([tp, docs]) => `
+          <div class="kpi-drawer-item">
+            <div style="display:flex; justify-content:space-between; gap:0.4rem;">
+              <a href="#taxonomy-list" class="kpi-drawer-tax-jump" data-tax="${{escapeHtml(tp)}}" style="font-weight:700;">${{escapeHtml(tp)}}</a>
+              <span class="badge">${{docs.length}} linked docs</span>
+            </div>
+            <div class="doc-meta">
+              ${{docs.slice(0, 4).map(d => `<a href="#doc-results-container" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="doc-results-container" style="margin-right:0.45rem;">&rarr; ${{escapeHtml(d.doc_id)}}</a>`).join("")}}
+            </div>
+          </div>
+        `).join("");
+      }} else if (kKey === "nodes") {{
+        headerTitle = `Total Graph Nodes (${{DB.knowledge_graph.summary.node_count}} Nodes Linked to Documents)`;
+        sectionId = "graph-panel";
+        pageUrl = "knowledge_graph.json";
+        pageLabel = "Open Raw JSON-LD Graph";
+        itemsHtml = filteredDocs.slice(0, 48).map(d => `
+          <div class="kpi-drawer-item">
+            <div style="display:flex; justify-content:space-between; gap:0.4rem;">
+              <a href="#graph-panel" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(d.doc_id)}}" data-sec="graph-panel" style="font-weight:700;">doc:${{escapeHtml(d.doc_id)}}</a>
+              <span class="badge">${{d.concept_ids.length}} concepts &bull; ${{d.taxonomy_paths.length}} classes</span>
+            </div>
+            <div class="doc-meta">${{escapeHtml(d.title)}}</div>
+          </div>
+        `).join("");
+      }} else if (kKey === "edges") {{
+        const docEdges = DB.knowledge_graph.edges.filter(e => e.source.startsWith("doc:") || e.target.startsWith("doc:"));
+        headerTitle = `Total Graph Edges (${{DB.knowledge_graph.summary.edge_count}} Typed Edges Across Knowledge Graph)`;
+        sectionId = "graph-panel";
+        pageUrl = "summary.html";
+        pageLabel = "Open Summary & Graph MD Page";
+        itemsHtml = docEdges.slice(0, 48).map(e => {{
+          const srcDoc = e.source.startsWith("doc:") ? e.source.replace("doc:", "") : "";
+          const tgtDoc = e.target.startsWith("doc:") ? e.target.replace("doc:", "") : "";
+          const primaryDoc = srcDoc || tgtDoc;
+          return `
+            <div class="kpi-drawer-item">
+              <div style="display:flex; justify-content:space-between; gap:0.4rem;">
+                <a href="#graph-panel" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(primaryDoc)}}" data-sec="graph-panel" style="font-weight:700;">${{escapeHtml(e.source)}} &mdash;[${{escapeHtml(e.predicate)}}]&rarr; ${{escapeHtml(e.target)}}</a>
+              </div>
+              <div class="doc-meta">
+                ${{srcDoc ? `<a href="#doc-results-container" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(srcDoc)}}" data-sec="doc-results-container">Source: ${{escapeHtml(srcDoc)}}</a>` : ""}}
+                ${{tgtDoc ? ` &bull; <a href="#doc-results-container" class="kpi-drawer-doc-jump" data-doc="${{escapeHtml(tgtDoc)}}" data-sec="doc-results-container">Target: ${{escapeHtml(tgtDoc)}}</a>` : ""}}
+              </div>
+            </div>
+          `;
+        }}).join("");
+      }}
+
+      drawer.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;">
+          <div>
+            <div class="brand-eyebrow" style="margin-bottom:0.2rem;">Interactive KPI Linked-Documents Inspector</div>
+            <h3 style="margin:0; font-size:0.96rem;">${{headerTitle}}</h3>
+          </div>
+          <div style="display:flex; gap:0.45rem; align-items:center; flex-wrap:wrap;">
+            <a href="#${{sectionId}}" class="btn btn-sm" id="kpi-drawer-sec-btn">Jump to Section &darr;</a>
+            <a href="${{pageUrl}}" class="btn btn-sm">${{pageLabel}} &nearr;</a>
+            <button type="button" class="btn btn-sm" id="kpi-drawer-close-btn">&times; Close</button>
+          </div>
         </div>
-      `).join("");
+        <div class="kpi-drawer-grid">${{itemsHtml}}</div>
+      `;
+
+      drawer.querySelector("#kpi-drawer-close-btn").addEventListener("click", () => {{
+        state.activeKpiDrawer = "";
+        renderKPIs(filteredDocs);
+      }});
+      drawer.querySelector("#kpi-drawer-sec-btn").addEventListener("click", e => {{
+        e.preventDefault();
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({{ behavior: "smooth", block: "start" }});
+      }});
+      drawer.querySelectorAll(".kpi-drawer-doc-jump").forEach(a => {{
+        a.addEventListener("click", e => {{
+          e.preventDefault();
+          focusDocumentInSection(a.dataset.doc, a.dataset.sec, a.dataset.chunks === "1");
+        }});
+      }});
+      drawer.querySelectorAll(".kpi-drawer-concept-jump").forEach(a => {{
+        a.addEventListener("click", e => {{
+          e.preventDefault();
+          state.conceptId = a.dataset.concept;
+          state.selectedGraphNodeId = state.conceptId;
+          state.page = 1;
+          refreshAll();
+          const el = document.getElementById("word-cloud-panel");
+          if (el) el.scrollIntoView({{ behavior: "smooth", block: "start" }});
+        }});
+      }});
+      drawer.querySelectorAll(".kpi-drawer-tax-jump").forEach(a => {{
+        a.addEventListener("click", e => {{
+          e.preventDefault();
+          state.taxonomyPath = a.dataset.tax;
+          state.page = 1;
+          refreshAll();
+          const el = document.getElementById("taxonomy-list");
+          if (el) el.scrollIntoView({{ behavior: "smooth", block: "start" }});
+        }});
+      }});
     }}
 
     function initTechDropdown() {{
@@ -1965,16 +2453,674 @@ def render_github_pages_html(
     document.getElementById("close-modal").addEventListener("click", () => {{
       document.getElementById("chunk-modal").close();
     }});
-    document.getElementById("theme-toggle").addEventListener("click", () => {{
-      const root = document.documentElement;
-      root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+    const THEMES = ["dark", "tron", "light"];
+    function applyTheme(themeName) {{
+      const valid = THEMES.includes(themeName) ? themeName : "dark";
+      document.documentElement.dataset.theme = valid;
+      try {{ localStorage.setItem("reading_db_theme", valid); }} catch (_) {{}}
+      document.querySelectorAll(".theme-opt").forEach(btn => {{
+        btn.classList.toggle("active", btn.dataset.setTheme === valid);
+      }});
+    }}
+    document.querySelectorAll(".theme-opt").forEach(btn => {{
+      btn.addEventListener("click", () => applyTheme(btn.dataset.setTheme));
     }});
+    document.getElementById("theme-toggle").addEventListener("click", () => {{
+      const curr = document.documentElement.dataset.theme || "dark";
+      const next = THEMES[(THEMES.indexOf(curr) + 1) % THEMES.length];
+      applyTheme(next);
+    }});
+    try {{
+      const savedTheme = localStorage.getItem("reading_db_theme");
+      if (savedTheme) applyTheme(savedTheme);
+    }} catch (_) {{}}
 
     initTechDropdown();
     computeGraphLayout();
     renderGraphLegend();
     setupGraphInteractions();
+
+    // Support deep-linking from taxonomy.html / chunks.html / summary.html via #doc=<doc_id>
+    if (window.location.hash && window.location.hash.startsWith("#doc=")) {{
+      const targetDocId = decodeURIComponent(window.location.hash.slice(5));
+      if (DB.documents.some(d => d.doc_id === targetDocId)) {{
+        state.docId = targetDocId;
+        state.selectedGraphNodeId = `doc:${{targetDocId}}`;
+      }}
+    }}
     refreshAll();
+  </script>
+</body>
+</html>
+"""
+
+
+def render_markdown_artifact_html(
+    page_key: str,
+    page_title: str,
+    page_subtitle: str,
+    markdown_text: str,
+    raw_links: list[dict[str, str]],
+) -> str:
+    """Render a standalone, themed HTML page (`taxonomy.html`, `chunks.html`, `summary.html`) that renders Markdown and preserves download/raw file links."""
+    md_json = json.dumps(markdown_text)
+    tax_active = "active" if page_key == "taxonomy" else ""
+    chunks_active = "active" if page_key == "chunks" else ""
+    summary_active = "active" if page_key == "summary" else ""
+
+    raw_buttons_html = "\n".join(
+        f'<a class="btn btn-sm" href="{link["href"]}" '
+        + (f'download="{link["download"]}"' if link.get("download") else 'target="_blank" rel="noopener"')
+        + f'>{link["label"]}</a>'
+        for link in raw_links
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{page_title} — Reading DB Markdown Render</title>
+  <style>
+    :root {{
+      --bg: #0b0f19;
+      --bg-elevated: rgba(19, 27, 46, 0.85);
+      --bg-card: rgba(23, 33, 56, 0.9);
+      --bg-chip: rgba(56, 189, 248, 0.12);
+      --border: rgba(148, 163, 184, 0.18);
+      --border-strong: rgba(56, 189, 248, 0.48);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #a855f7;
+      --accent-3: #10b981;
+      --accent-warn: #f59e0b;
+      --accent-danger: #f43f5e;
+      --shadow: 0 16px 36px -14px rgba(2, 6, 23, 0.75);
+      --radius: 13px;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    }}
+    [data-theme="light"] {{
+      --bg: #f8fafc;
+      --bg-elevated: rgba(255, 255, 255, 0.94);
+      --bg-card: #ffffff;
+      --bg-chip: rgba(2, 132, 199, 0.1);
+      --border: rgba(15, 23, 42, 0.12);
+      --border-strong: rgba(2, 132, 199, 0.5);
+      --text: #0f172a;
+      --text-muted: #475569;
+      --accent: #0284c7;
+      --accent-2: #7c3aed;
+      --accent-3: #059669;
+      --shadow: 0 10px 26px -10px rgba(15, 23, 42, 0.1);
+    }}
+    [data-theme="tron"] {{
+      --bg: #020813;
+      --bg-elevated: rgba(3, 14, 30, 0.9);
+      --bg-card: rgba(4, 18, 38, 0.92);
+      --bg-chip: rgba(0, 240, 255, 0.14);
+      --border: rgba(0, 240, 255, 0.34);
+      --border-strong: #00f0ff;
+      --text: #e2fbff;
+      --text-muted: #5ec2e8;
+      --accent: #00f0ff;
+      --accent-2: #0088ff;
+      --accent-3: #00ffaa;
+      --accent-warn: #ff9e00;
+      --accent-danger: #ff2a6d;
+      --shadow: 0 0 22px rgba(0, 240, 255, 0.18), inset 0 0 14px rgba(0, 240, 255, 0.07);
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: var(--font-sans);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.11), transparent 35%),
+        radial-gradient(circle at 88% 12%, rgba(168, 85, 247, 0.11), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }}
+    [data-theme="tron"] body {{
+      background-color: #020813;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.22), transparent 55%),
+        radial-gradient(circle at 85% 20%, rgba(0, 136, 255, 0.18), transparent 45%),
+        linear-gradient(rgba(0, 240, 255, 0.075) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.075) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      background-attachment: fixed;
+    }}
+    [data-theme="tron"] header.hero,
+    [data-theme="tron"] .artifact-toolbar,
+    [data-theme="tron"] .toc-panel,
+    [data-theme="tron"] .md-panel {{
+      border-color: rgba(0, 240, 255, 0.38);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.14), inset 0 0 12px rgba(0, 240, 255, 0.05);
+    }}
+    [data-theme="tron"] h1,
+    [data-theme="tron"] .brand-eyebrow,
+    [data-theme="tron"] .md-body h2 {{
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.55);
+    }}
+    a {{ color: var(--accent); text-decoration: none; }}
+    a:hover {{ text-decoration: underline; }}
+    .shell {{
+      max-width: 1420px;
+      margin: 0 auto;
+      padding: 1.25rem 1.4rem 3rem;
+    }}
+    header.hero {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }}
+    .brand-eyebrow {{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      background: var(--bg-chip);
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      margin-bottom: 0.35rem;
+    }}
+    h1 {{
+      margin: 0 0 0.2rem;
+      font-size: clamp(1.3rem, 2vw, 1.75rem);
+      letter-spacing: -0.02em;
+    }}
+    .subtitle {{
+      margin: 0;
+      color: var(--text-muted);
+      max-width: 760px;
+      font-size: 0.88rem;
+    }}
+    .hero-actions {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+    }}
+    .btn {{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.42rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.14s ease;
+      user-select: none;
+    }}
+    .btn:hover {{
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }}
+    .btn.active {{
+      border-color: var(--accent);
+      background: var(--bg-chip);
+      color: var(--accent);
+    }}
+    .btn-sm {{
+      padding: 0.28rem 0.62rem;
+      font-size: 0.74rem;
+    }}
+    .btn-primary {{
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border: none;
+    }}
+    .theme-group {{
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0.18rem;
+      gap: 0.2rem;
+    }}
+    .theme-opt {{
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 0.28rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }}
+    .theme-opt.active {{
+      background: var(--bg-card);
+      color: var(--accent);
+      border-color: var(--border-strong);
+    }}
+    .theme-opt[data-set-theme="tron"].active {{
+      color: #00f0ff;
+      border-color: #00f0ff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.75);
+    }}
+    .artifact-toolbar {{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.8rem 1.1rem;
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }}
+    .artifact-layout {{
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 1.1rem;
+      align-items: start;
+    }}
+    @media (max-width: 980px) {{
+      .artifact-layout {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+    .toc-panel {{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.95rem 1rem;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 1rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+    }}
+    .toc-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+      margin-top: 0.55rem;
+    }}
+    .toc-link {{
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      padding: 0.24rem 0.45rem;
+      border-radius: 6px;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }}
+    .toc-link:hover {{
+      background: var(--bg-chip);
+      color: var(--accent);
+      text-decoration: none;
+    }}
+    .toc-link.depth-3 {{
+      padding-left: 1.1rem;
+      font-size: 0.72rem;
+    }}
+    .md-panel {{
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.65rem;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }}
+    .md-body h1 {{
+      font-size: 1.55rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-top: 0;
+    }}
+    .md-body h2 {{
+      font-size: 1.22rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.35rem;
+      margin-top: 1.8rem;
+    }}
+    .md-body h3 {{
+      font-size: 1.02rem;
+      margin-top: 1.35rem;
+      color: var(--text);
+    }}
+    .md-body h4 {{
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      color: var(--accent-2);
+      margin-top: 1.1rem;
+    }}
+    .md-body code {{
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      background: var(--bg-chip);
+      color: var(--accent);
+      padding: 0.12rem 0.38rem;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }}
+    .md-body pre {{
+      background: rgba(2, 6, 23, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.95rem 1.1rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }}
+    [data-theme="light"] .md-body pre {{
+      background: #f1f5f9;
+    }}
+    .md-body pre code {{
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: var(--text);
+    }}
+    .md-table-wrap {{
+      overflow-x: auto;
+      margin: 0.85rem 0 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }}
+    .md-body table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.81rem;
+    }}
+    .md-body th, .md-body td {{
+      padding: 0.58rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }}
+    .md-body th {{
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: rgba(2, 6, 23, 0.25);
+    }}
+    .md-body ul {{
+      padding-left: 1.35rem;
+    }}
+    .md-body li {{
+      margin-bottom: 0.32rem;
+    }}
+    .search-input {{
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.7rem;
+      border-radius: 7px;
+      font-size: 0.8rem;
+      min-width: 240px;
+    }}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div>
+        <div class="brand-eyebrow">OntoLogic-Ready Knowledge Base &bull; Rendered Markdown View</div>
+        <h1>{page_title}</h1>
+        <p class="subtitle">{page_subtitle}</p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="index.html">&larr; Dashboard</a>
+        <a class="btn" href="knowledge_graph.json" target="_blank" rel="noopener">JSON-LD</a>
+        <a class="btn {tax_active}" href="taxonomy.html">Taxonomy</a>
+        <a class="btn {chunks_active}" href="chunks.html">Chunks</a>
+        <a class="btn {summary_active}" href="summary.html">Summary MD</a>
+        <div class="theme-group" role="group" aria-label="Theme Selector">
+          <button class="theme-opt active" type="button" data-set-theme="dark">Dark</button>
+          <button class="theme-opt" type="button" data-set-theme="tron">&#x26A1; TRON</button>
+          <button class="theme-opt" type="button" data-set-theme="light">Light</button>
+        </div>
+        <button class="btn btn-primary" id="theme-toggle" type="button">Theme</button>
+      </div>
+    </header>
+
+    <section class="artifact-toolbar">
+      <div style="display:flex; flex-wrap:wrap; gap:0.45rem; align-items:center;">
+        <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); margin-right:0.2rem;">Raw &amp; Download Links:</span>
+        {raw_buttons_html}
+        <button class="btn btn-sm" id="copy-md-btn" type="button">Copy Markdown</button>
+        <button class="btn btn-sm" id="toggle-raw-view-btn" type="button">View Raw Markdown Source</button>
+      </div>
+      <div style="display:flex; gap:0.45rem; align-items:center;">
+        <input type="search" id="md-filter-input" class="search-input" placeholder="Filter sections, headings, or documents..." />
+      </div>
+    </section>
+
+    <div class="artifact-layout">
+      <aside class="toc-panel">
+        <div style="font-family:var(--font-mono); font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--accent);">Table of Contents</div>
+        <nav class="toc-list" id="toc-list"></nav>
+      </aside>
+      <main class="md-panel">
+        <div class="md-body" id="md-rendered"></div>
+        <pre id="md-raw-source" hidden style="margin:0; white-space:pre-wrap;"></pre>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const RAW_MD = {md_json};
+
+    function escapeHtml(str) {{
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }}
+
+    function slugify(text) {{
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "section";
+    }}
+
+    function formatInline(text) {{
+      let s = escapeHtml(text);
+      s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+      s = s.replace(/\\*\\*([^*]+)\\*\\*/g, "<strong>$1</strong>");
+      s = s.replace(/\\*([^*]+)\\*/g, "<em>$1</em>");
+      s = s.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, (_, label, url) => {{
+        const isExt = url.startsWith("http://") || url.startsWith("https://");
+        const attrs = isExt ? ' target="_blank" rel="noopener"' : "";
+        return `<a href="${{url}}"${{attrs}}>${{label}}</a>`;
+      }});
+      return s;
+    }}
+
+    function renderMarkdown(mdText, filterQuery = "") {{
+      const lines = mdText.split(/\\r?\\n/);
+      const toc = [];
+      let html = "";
+      let inCode = false;
+      let codeLang = "";
+      let codeBuf = [];
+      let inTable = false;
+      let tableRows = [];
+      let inList = false;
+
+      function flushList() {{
+        if (inList) {{
+          html += "</ul>";
+          inList = false;
+        }}
+      }}
+
+      function flushTable() {{
+        if (!inTable) return;
+        inTable = false;
+        if (tableRows.length < 2) return;
+        const headerCells = tableRows[0].split("|").slice(1, -1).map(c => c.trim());
+        const bodyRows = tableRows.slice(2);
+        const q = filterQuery.toLowerCase();
+        const filteredBody = q
+          ? bodyRows.filter(r => r.toLowerCase().includes(q))
+          : bodyRows;
+        html += `<div class="md-table-wrap"><table><thead><tr>` +
+          headerCells.map(h => `<th>${{formatInline(h)}}</th>`).join("") +
+          `</tr></thead><tbody>` +
+          filteredBody.map(row => {{
+            const cells = row.split("|").slice(1, -1).map(c => c.trim());
+            return `<tr>` + cells.map(c => `<td>${{formatInline(c)}}</td>`).join("") + `</tr>`;
+          }}).join("") +
+          `</tbody></table></div>`;
+        tableRows = [];
+      }}
+
+      for (let i = 0; i < lines.length; i++) {{
+        const line = lines[i];
+        if (line.startsWith("```")) {{
+          flushList();
+          flushTable();
+          if (!inCode) {{
+            inCode = true;
+            codeLang = line.slice(3).trim();
+            codeBuf = [];
+          }} else {{
+            inCode = false;
+            html += `<pre data-lang="${{escapeHtml(codeLang)}}"><code>${{escapeHtml(codeBuf.join("\\n"))}}</code></pre>`;
+            codeBuf = [];
+          }}
+          continue;
+        }}
+        if (inCode) {{
+          codeBuf.push(line);
+          continue;
+        }}
+
+        if (line.trim().startsWith("|") && line.trim().endsWith("|")) {{
+          flushList();
+          inTable = true;
+          tableRows.push(line.trim());
+          continue;
+        }} else if (inTable) {{
+          flushTable();
+        }}
+
+        const hMatch = line.match(/^(#{{1,4}})\\s+(.*)$/);
+        if (hMatch) {{
+          flushList();
+          const level = hMatch[1].length;
+          const rawHeading = hMatch[2].trim();
+          const id = `${{slugify(rawHeading)}}-${{i}}`;
+          if (level === 2 || level === 3) {{
+            toc.push({{ level, id, label: rawHeading.replace(/`/g, "") }});
+          }}
+          html += `<h${{level}} id="${{id}}">${{formatInline(rawHeading)}}</h${{level}}>`;
+          continue;
+        }}
+
+        if (line.match(/^\\s*-\\s+/)) {{
+          if (filterQuery && !line.toLowerCase().includes(filterQuery.toLowerCase())) {{
+            continue;
+          }}
+          if (!inList) {{
+            html += "<ul>";
+            inList = true;
+          }}
+          const itemText = line.replace(/^\\s*-\\s+/, "");
+          html += `<li>${{formatInline(itemText)}}</li>`;
+          continue;
+        }} else {{
+          flushList();
+        }}
+
+        if (!line.trim()) {{
+          continue;
+        }}
+
+        if (!filterQuery || line.toLowerCase().includes(filterQuery.toLowerCase())) {{
+          html += `<p>${{formatInline(line)}}</p>`;
+        }}
+      }}
+      flushList();
+      flushTable();
+
+      document.getElementById("md-rendered").innerHTML = html;
+      document.getElementById("md-raw-source").textContent = mdText;
+
+      const tocEl = document.getElementById("toc-list");
+      const q = filterQuery.toLowerCase();
+      const visibleToc = q ? toc.filter(t => t.label.toLowerCase().includes(q)) : toc.slice(0, 120);
+      tocEl.innerHTML = visibleToc.map(t => `
+        <a class="toc-link depth-${{t.level}}" href="#${{t.id}}" title="${{escapeHtml(t.label)}}">${{escapeHtml(t.label)}}</a>
+      `).join("");
+    }}
+
+    const THEMES = ["dark", "tron", "light"];
+    function applyTheme(themeName) {{
+      const valid = THEMES.includes(themeName) ? themeName : "dark";
+      document.documentElement.dataset.theme = valid;
+      try {{ localStorage.setItem("reading_db_theme", valid); }} catch (_) {{}}
+      document.querySelectorAll(".theme-opt").forEach(btn => {{
+        btn.classList.toggle("active", btn.dataset.setTheme === valid);
+      }});
+    }}
+    document.querySelectorAll(".theme-opt").forEach(btn => {{
+      btn.addEventListener("click", () => applyTheme(btn.dataset.setTheme));
+    }});
+    document.getElementById("theme-toggle").addEventListener("click", () => {{
+      const curr = document.documentElement.dataset.theme || "dark";
+      const next = THEMES[(THEMES.indexOf(curr) + 1) % THEMES.length];
+      applyTheme(next);
+    }});
+    try {{
+      const savedTheme = localStorage.getItem("reading_db_theme");
+      if (savedTheme) applyTheme(savedTheme);
+    }} catch (_) {{}}
+
+    document.getElementById("md-filter-input").addEventListener("input", e => {{
+      renderMarkdown(RAW_MD, e.target.value.trim());
+    }});
+    document.getElementById("copy-md-btn").addEventListener("click", async e => {{
+      try {{
+        await navigator.clipboard.writeText(RAW_MD);
+        e.target.textContent = "Copied!";
+        setTimeout(() => {{ e.target.textContent = "Copy Markdown"; }}, 1400);
+      }} catch (_) {{}}
+    }});
+    let showingRaw = false;
+    document.getElementById("toggle-raw-view-btn").addEventListener("click", e => {{
+      showingRaw = !showingRaw;
+      document.getElementById("md-rendered").hidden = showingRaw;
+      document.getElementById("md-raw-source").hidden = !showingRaw;
+      e.target.textContent = showingRaw ? "View Rendered Markdown" : "View Raw Markdown Source";
+    }});
+
+    renderMarkdown(RAW_MD);
   </script>
 </body>
 </html>

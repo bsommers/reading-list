@@ -369,3 +369,138 @@ def render_summary_markdown(
         lines.append("")
 
     return "\n".join(lines)
+
+
+def render_taxonomy_markdown(
+    documents: list[Document],
+    taxonomy_index: dict[str, Any],
+) -> str:
+    """Render a comprehensive Markdown report of the Conceptual Taxonomy, OntoLogic classes, and linked documents."""
+    categories = taxonomy_index.get("taxonomy_categories", [])
+    doc_by_id = {d.doc_id: d for d in documents}
+    roots = [c for c in categories if not c.get("parent_path")]
+
+    lines: list[str] = [
+        "# Conceptual Taxonomy & OntoLogic Class Hierarchy",
+        "",
+        f"- **Total Taxonomy Categories:** {len(categories)}",
+        f"- **Top-Level Root Domains:** {len(roots)}",
+        f"- **Canonical Concepts Cataloged:** {len(CONCEPT_CATALOG)}",
+        f"- **Total Corpus Documents Indexed:** {len(documents)}",
+        "",
+        "## 1. Taxonomy Hierarchy Summary Table",
+        "",
+        "| Category Path | OntoLogic Class URI | Technology Area | Linked Docs | Linked Chunks |",
+        "|---|---|---|---|---|",
+    ]
+    for cat in categories:
+        doc_count = len(cat.get("document_ids", []))
+        chunk_count = len(cat.get("chunk_ids", []))
+        lines.append(
+            f"| **{cat['path']}** | `{cat['ontologic_class_uri']}` | {cat['technology_area']} | {doc_count} | {chunk_count} |"
+        )
+
+    lines.extend(["", "## 2. Detailed Category Breakdown & Linked Documents", ""])
+    for cat in categories:
+        doc_ids = cat.get("document_ids", [])
+        lines.append(f"### {cat['label']} (`{cat['ontologic_class_uri']}`)")
+        lines.append("")
+        lines.append(f"- **Full Hierarchy Path:** `{cat['path']}`")
+        lines.append(f"- **Parent Category:** `{cat.get('parent_path') or 'Root Domain'}`")
+        lines.append(f"- **Technology Area:** {cat['technology_area']}")
+        lines.append(f"- **Description:** {cat['description']}")
+        lines.append(f"- **Linked Documents ({len(doc_ids)}):**")
+        if not doc_ids:
+            lines.append("  - *(No documents currently matched in this category)*")
+        else:
+            for did in doc_ids:
+                doc = doc_by_id.get(did)
+                if doc:
+                    ext_link = f"[{doc.title}]({doc.url})" if doc.url else doc.title
+                    lines.append(
+                        f"  - [`{doc.doc_id}`](index.html#doc={doc.doc_id}) — {ext_link} "
+                        f"(`{doc.doc_type}`, status: `{doc.reading_status}`, priority: `{doc.priority}`)"
+                    )
+                else:
+                    lines.append(f"  - [`{did}`](index.html#doc={did})")
+        lines.append("")
+
+    lines.extend(
+        [
+            "## 3. Canonical Concept Catalog",
+            "",
+            "| Concept ID | Label | Technology Area | Taxonomy Path | Related Concepts |",
+            "|---|---|---|---|---|",
+        ]
+    )
+    for concept in CONCEPT_CATALOG:
+        rel_str = ", ".join(f"`{r}`" for r in concept.related_concepts) or "—"
+        lines.append(
+            f"| `{concept.concept_id}` | **{concept.label}** | {concept.technology_area} | `{concept.taxonomy_path}` | {rel_str} |"
+        )
+
+    return "\n".join(lines) + "\n"
+
+
+def render_chunks_markdown(
+    documents: list[Document],
+    chunks_by_doc: dict[str, list[SemanticChunk]],
+) -> str:
+    """Render a comprehensive Markdown report of all Semantic Chunks grouped by document."""
+    total_chunks = sum(len(v) for v in chunks_by_doc.values())
+    total_words = sum(
+        c.token_count for chunks in chunks_by_doc.values() for c in chunks
+    )
+
+    lines: list[str] = [
+        "# Semantic Chunks & Section Index",
+        "",
+        f"- **Documents Indexed:** {len(documents)}",
+        f"- **Total Semantic Chunks:** {total_chunks}",
+        f"- **Total Words Across Chunks:** {total_words:,}",
+        "",
+        "## 1. Document Chunk Summary Table",
+        "",
+        "| # | Document ID | Title | Type | Status | Chunks | Total Words |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for idx, doc in enumerate(documents, start=1):
+        d_chunks = chunks_by_doc.get(doc.doc_id, [])
+        d_words = sum(c.token_count for c in d_chunks)
+        title_link = f"[{doc.title}](index.html#doc={doc.doc_id})"
+        lines.append(
+            f"| {idx} | `{doc.doc_id}` | {title_link} | `{doc.doc_type}` | `{doc.reading_status}` | {len(d_chunks)} | {d_words} |"
+        )
+
+    lines.extend(["", "## 2. Full Semantic Chunks by Document", ""])
+    for idx, doc in enumerate(documents, start=1):
+        d_chunks = chunks_by_doc.get(doc.doc_id, [])
+        authors_str = ", ".join(doc.authors) if doc.authors else "Research Staff"
+        source_link = f"[External Source]({doc.url})" if doc.url else "Local Note"
+        lines.append(f"### {idx}. {doc.title} (`{doc.doc_id}`)")
+        lines.append("")
+        lines.append(
+            f"- **Metadata:** `{doc.doc_type}` | Status: `{doc.reading_status}` | Priority: `{doc.priority}` | "
+            f"Published: `{doc.published_date or 'N/A'}` | Authors: {authors_str}"
+        )
+        lines.append(
+            f"- **Navigation:** [Inspect on Dashboard](index.html#doc={doc.doc_id}) | {source_link}"
+        )
+        lines.append("")
+        for chunk in d_chunks:
+            concepts_str = ", ".join(f"`{c}`" for c in chunk.concept_ids) or "none"
+            tax_str = "; ".join(f"`{p}`" for p in chunk.taxonomy_paths) or "none"
+            tech_str = ", ".join(chunk.technology_areas) or "none"
+            lines.append(
+                f"#### `{chunk.chunk_id}` — {chunk.heading} ({chunk.token_count} words)"
+            )
+            lines.append("")
+            lines.append(chunk.text)
+            lines.append("")
+            lines.append(f"- **Matched Concepts:** {concepts_str}")
+            lines.append(f"- **Technology Areas:** {tech_str}")
+            lines.append(f"- **Taxonomy Hierarchy:** {tax_str}")
+            lines.append("")
+
+    return "\n".join(lines) + "\n"
+

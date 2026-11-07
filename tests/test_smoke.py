@@ -317,6 +317,24 @@ class ReadingListScaffoldTests(unittest.TestCase):
             self.assertIn('id="domain-cards-grid"', html_content)
             self.assertIn('id="view-table-btn"', html_content)
             self.assertIn('id="fullscreen-graph-btn"', html_content)
+            self.assertIn('data-set-theme="tron"', html_content)
+            self.assertIn('id="kpi-linked-drawer"', html_content)
+            self.assertIn('href="taxonomy.html"', html_content)
+            self.assertIn('href="chunks.html"', html_content)
+            self.assertIn('href="summary.html"', html_content)
+
+            tax_html = artifacts["taxonomy_html"].read_text(encoding="utf-8")
+            self.assertIn('href="taxonomy_tree.json"', tax_html)
+            self.assertIn('download="taxonomy_tree.json"', tax_html)
+            self.assertIn('data-set-theme="tron"', tax_html)
+
+            chunks_html = artifacts["chunks_html"].read_text(encoding="utf-8")
+            self.assertIn('href="chunks.json"', chunks_html)
+            self.assertIn('download="chunks.json"', chunks_html)
+
+            summary_html = artifacts["summary_html"].read_text(encoding="utf-8")
+            self.assertIn('href="summary.md"', summary_html)
+            self.assertIn('download="summary.md"', summary_html)
 
     def test_kitsumiko_curriculum_import(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

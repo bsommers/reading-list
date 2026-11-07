@@ -37,7 +37,9 @@ from reading_list.enrich import (
 from reading_list.graph import (
     build_knowledge_graph,
     build_taxonomy_index,
+    render_chunks_markdown,
     render_summary_markdown,
+    render_taxonomy_markdown,
 )
 from reading_list.kitsumiko import (
     build_kitsumiko_corpus,
@@ -46,7 +48,7 @@ from reading_list.kitsumiko import (
 )
 from reading_list.models import Document, DocumentRelation, SemanticChunk
 from reading_list.research import research_topic
-from reading_list.site import render_github_pages_html
+from reading_list.site import render_github_pages_html, render_markdown_artifact_html
 
 DEFAULT_FIXTURE = Path("tests/fixtures/seed_corpus.json")
 DEFAULT_CORPUS = Path("input/corpus.json")
@@ -129,8 +131,46 @@ def run_build(input_path: Path, output_dir: Path) -> dict[str, Path]:
     kg = build_knowledge_graph(documents, chunks_by_doc)
     taxonomy_index = build_taxonomy_index(documents, chunks_by_doc)
     summary_md = render_summary_markdown(documents, chunks_by_doc, word_cloud, kg)
+    taxonomy_md = render_taxonomy_markdown(documents, taxonomy_index)
+    chunks_md = render_chunks_markdown(documents, chunks_by_doc)
     site_html = render_github_pages_html(
         documents, chunks_by_doc, word_cloud, taxonomy_index, kg
+    )
+    taxonomy_html = render_markdown_artifact_html(
+        page_key="taxonomy",
+        page_title="Conceptual Taxonomy & OntoLogic Class Hierarchy",
+        page_subtitle="Rendered Markdown hierarchy of OntoLogic classes, technology areas, canonical concepts, and linked documents.",
+        markdown_text=taxonomy_md,
+        raw_links=[
+            {"label": "Raw taxonomy_tree.json", "href": "taxonomy_tree.json"},
+            {"label": "⬇ Download taxonomy_tree.json", "href": "taxonomy_tree.json", "download": "taxonomy_tree.json"},
+            {"label": "Raw taxonomy.md", "href": "taxonomy.md"},
+            {"label": "⬇ Download taxonomy.md", "href": "taxonomy.md", "download": "taxonomy.md"},
+        ],
+    )
+    chunks_html = render_markdown_artifact_html(
+        page_key="chunks",
+        page_title="Semantic Chunks & Section Index",
+        page_subtitle="Rendered Markdown view of all semantically chunked document sections, matched concepts, and taxonomy paths.",
+        markdown_text=chunks_md,
+        raw_links=[
+            {"label": "Raw chunks.json", "href": "chunks.json"},
+            {"label": "⬇ Download chunks.json", "href": "chunks.json", "download": "chunks.json"},
+            {"label": "Raw chunks.md", "href": "chunks.md"},
+            {"label": "⬇ Download chunks.md", "href": "chunks.md", "download": "chunks.md"},
+        ],
+    )
+    summary_html = render_markdown_artifact_html(
+        page_key="summary",
+        page_title="Executive Summary & Knowledge Graph Report",
+        page_subtitle="Rendered Markdown summary of indexed documents, word-cloud frequencies, taxonomy graph, and chunk breakdown.",
+        markdown_text=summary_md,
+        raw_links=[
+            {"label": "Raw summary.md", "href": "summary.md"},
+            {"label": "⬇ Download summary.md", "href": "summary.md", "download": "summary.md"},
+            {"label": "Raw corpus.json", "href": "corpus.json"},
+            {"label": "⬇ Download corpus.json", "href": "corpus.json", "download": "corpus.json"},
+        ],
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -166,18 +206,38 @@ def run_build(input_path: Path, output_dir: Path) -> dict[str, Path]:
     summary_path = output_dir / "summary.md"
     summary_path.write_text(summary_md, encoding="utf-8")
 
+    taxonomy_md_path = output_dir / "taxonomy.md"
+    taxonomy_md_path.write_text(taxonomy_md, encoding="utf-8")
+
+    chunks_md_path = output_dir / "chunks.md"
+    chunks_md_path.write_text(chunks_md, encoding="utf-8")
+
     index_html_path = output_dir / "index.html"
     index_html_path.write_text(site_html, encoding="utf-8")
+
+    taxonomy_html_path = output_dir / "taxonomy.html"
+    taxonomy_html_path.write_text(taxonomy_html, encoding="utf-8")
+
+    chunks_html_path = output_dir / "chunks.html"
+    chunks_html_path.write_text(chunks_html, encoding="utf-8")
+
+    summary_html_path = output_dir / "summary.html"
+    summary_html_path.write_text(summary_html, encoding="utf-8")
 
     nojekyll_path = output_dir / ".nojekyll"
     nojekyll_path.write_text("", encoding="utf-8")
 
     return {
         "chunks": chunks_path,
+        "chunks_md": chunks_md_path,
+        "chunks_html": chunks_html_path,
         "word_cloud": wc_path,
         "taxonomy_tree": tax_path,
+        "taxonomy_md": taxonomy_md_path,
+        "taxonomy_html": taxonomy_html_path,
         "knowledge_graph": kg_path,
         "summary": summary_path,
+        "summary_html": summary_html_path,
         "index_html": index_html_path,
     }
 
