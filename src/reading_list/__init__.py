@@ -30,7 +30,7 @@ from reading_list.models import (
 from reading_list.research import research_topic
 from reading_list.site import render_github_pages_html
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "__version__",

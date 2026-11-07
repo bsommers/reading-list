@@ -23,7 +23,7 @@ README_PATH = Path(__file__).parent.parent / "README.md"
 
 class ReadingListScaffoldTests(unittest.TestCase):
     def test_package_version_and_fixture_load(self) -> None:
-        self.assertEqual(reading_list.__version__, "0.1.0")
+        self.assertEqual(reading_list.__version__, "0.2.0")
         docs = load_corpus(FIXTURE_PATH)
         self.assertEqual(len(docs), 2)
         doc_ids = {d.doc_id for d in docs}

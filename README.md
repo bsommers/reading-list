@@ -10,7 +10,7 @@ Core Python tooling, research agent, semantic chunker, conceptual taxonomy class
 
 | Path | Holds | Git |
 |---|---|---|
-| `src/reading_list/` | Importable Python package (`models`, `taxonomy`, `chunker`, `graph`, `enrich`, `research`, `site`, `cli`) | tracked |
+| `src/reading_list/` | Importable Python package (`models`, `taxonomy`, `chunker`, `graph`, `enrich`, `research`, `kitsumiko`, `site`, `cli`) | tracked |
 | `tests/` | Unit/smoke tests (`test_smoke.py`) and minimal demo corpus (`fixtures/seed_corpus.json`) | tracked |
 | `docs/` | Architecture (`architecture.md`), OntoLogic roadmap, and ADRs (`docs/adr/`) | tracked |
 | `input/` | Local working corpus manifest (`corpus.json`) | ignored except `README.md` |
@@ -58,4 +58,4 @@ python3 -m reading_list.cli classify \
 
 ## Status
 
-Tooling (`research`, `add`, `list`, `status`, `update`, `publish-db`, `classify`), semantic chunker, conceptual taxonomy classifier, and GitHub Pages generator operational (`v0.1.0`).
+Tooling (`research`, `add`, `list`, `status`, `update`, `publish-db`, `import-curriculum`, `classify`), semantic chunker, conceptual taxonomy classifier, and GitHub Pages generator operational (`v0.2.0`).
