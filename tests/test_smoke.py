@@ -221,6 +221,24 @@ class ReadingListScaffoldTests(unittest.TestCase):
             self.assertTrue((db_dir / "index.html").exists())
             self.assertTrue((db_dir / "knowledge_graph.json").exists())
 
+            rc_sat = main(
+                [
+                    "research",
+                    "--topic",
+                    "SAT and SMT solvers applications in software development, graph analysis, and ontologies",
+                    "--db-dir",
+                    str(db_dir),
+                ]
+            )
+            self.assertEqual(rc_sat, 0)
+            docs_after = load_corpus(db_dir / "corpus.json")
+            doc_ids_after = {d.doc_id for d in docs_after}
+            self.assertIn("arxiv-1402.4677", doc_ids_after)
+            self.assertIn("arxiv-2201.04663", doc_ids_after)
+            self.assertIn("arxiv-1610.00502", doc_ids_after)
+            self.assertIn("arxiv-1507.01763", doc_ids_after)
+            self.assertIn("research-sat-and-smt-solvers-applications-in-software", doc_ids_after)
+
     def test_cli_build_end_to_end(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp)

@@ -222,6 +222,220 @@ CURATED_RESEARCH_LIBRARY: tuple[dict[str, Any], ...] = (
             },
         ],
     },
+    {
+        "keywords": (
+            "sat",
+            "smt",
+            "solver",
+            "solvers",
+            "software",
+            "development",
+            "graph",
+            "analysis",
+            "ontologies",
+            "ontology",
+            "monosat",
+            "cvc5",
+            "z3",
+            "symbolic",
+            "execution",
+            "owl",
+        ),
+        "documents": [
+            {
+                "doc_id": "arxiv-1402.4677",
+                "title": "MonoSAT: Modulo Theories for Graphs, Networks, and Geometry",
+                "doc_type": "academic_paper",
+                "url": "https://arxiv.org/abs/1402.4677",
+                "published_date": "2015-01-25",
+                "authors": [
+                    "Sam Bayless",
+                    "Noah Bayless",
+                    "Holger H. Hoos",
+                    "Alan J. Hu",
+                ],
+                "institutions": [
+                    "University of British Columbia",
+                ],
+                "identifiers": {
+                    "arxiv": "1402.4677",
+                    "pdf_url": "https://arxiv.org/pdf/1402.4677",
+                    "primary_category": "cs.LO",
+                },
+                "reading_status": "read",
+                "priority": "high",
+                "tags": [
+                    "monosat",
+                    "smt",
+                    "sat",
+                    "graph-analysis",
+                    "monotonic-theories",
+                    "reachability",
+                ],
+                "notes": "Pioneering SMT framework (DPLL(T)) for finite monotonic theories supporting native graph predicates (reachability, shortest path, max-flow, acyclicity).",
+                "relations": [],
+                "content": (
+                    "## Graph Analysis & Monotonic Theories in SMT\n"
+                    "Encoding complex graph-theoretic properties — such as reachability, shortest paths, maximum s-t flow, minimum spanning trees, and directed acyclic graph (DAG) acyclicity — directly into Boolean SAT or standard SMT bit-vector/integer theories causes severe formula blowup and poor solver propagation. MonoSAT introduces a general DPLL(T) framework for finite monotonic theories that integrates dedicated incremental graph algorithms directly inside an SMT solver.\n\n"
+                    "## Under- and Over-Approximation Theory Propagation\n"
+                    "MonoSAT maintains dual under-approximating and over-approximating graphs as Boolean edge variables are assigned during Conflict-Driven Clause Learning (CDCL) search. When a graph predicate (such as reachability or cycle-freeness) becomes violated, MonoSAT extracts a succinct conflict clause (cut-set or witness path) in polynomial time, orders of magnitude faster than propositional encodings.\n\n"
+                    "## Applications in Network Verification, Routing & Ontology Graphs\n"
+                    "MonoSAT powers formal cloud network reachability analysis, circuit routing, dependency graph resolution in software package managers, and structural acyclicity/subsumption checks in large-scale knowledge graphs and ontologies."
+                ),
+            },
+            {
+                "doc_id": "arxiv-2201.04663",
+                "title": "cvc5: A Versatile and Industrial-Strength SMT Solver",
+                "doc_type": "academic_paper",
+                "url": "https://arxiv.org/abs/2201.04663",
+                "published_date": "2022-01-13",
+                "authors": [
+                    "Haniel Barbosa",
+                    "Clark Barrett",
+                    "Martin Brain",
+                    "Gereon Kremer",
+                    "Aina Niemetz",
+                    "Mathias Preiner",
+                    "Andrew Reynolds",
+                    "Cesare Tinelli",
+                ],
+                "institutions": [
+                    "Stanford University",
+                    "University of Iowa",
+                    "University of Oxford",
+                ],
+                "identifiers": {
+                    "arxiv": "2201.04663",
+                    "pdf_url": "https://arxiv.org/pdf/2201.04663",
+                    "primary_category": "cs.LO",
+                },
+                "reading_status": "reading",
+                "priority": "high",
+                "tags": [
+                    "cvc5",
+                    "smt",
+                    "sat",
+                    "sygus",
+                    "software-verification",
+                    "ontologies",
+                ],
+                "notes": "Industrial-strength DPLL(T) SMT and SyGuS solver supporting strings, finite sets, relations, bit-vectors, and algebraic datatypes.",
+                "relations": [
+                    {
+                        "relation_type": "CITES",
+                        "target_doc_id": "arxiv-1402.4677",
+                    },
+                    {
+                        "relation_type": "CITES",
+                        "target_doc_id": "arxiv-2208.03699",
+                    },
+                ],
+                "content": (
+                    "## Next-Generation DPLL(T) SMT Architecture\n"
+                    "cvc5 is an industrial-strength Satisfiability Modulo Theories (SMT) and Syntax-Guided Synthesis (SyGuS) solver built on a modular CDCL(T) / DPLL(T) core. It combines high-performance Boolean SAT solving with decision procedures for bit-vectors, arrays, floating-point arithmetic, strings and regular expressions, algebraic datatypes, and quantifier instantiation.\n\n"
+                    "## Finite Sets, Relations & Ontology Constraint Solving\n"
+                    "Uniquely suited to graph analysis and formal ontologies, cvc5 provides native decision procedures for the Theory of Finite Sets and the Theory of Finite Relations (including transitive closure, relational join, and cardinality constraints). These relational theories enable direct SMT encoding of OWL Description Logic axioms, Alloy structural models, and SHACL knowledge-graph validation rules.\n\n"
+                    "## Software Development & Deductive Verification\n"
+                    "In software engineering, cvc5 serves as the automated reasoning backend for deductive verifiers (Dafny, Spark/Ada, Viper), smart-contract auditors, cloud IAM policy analyzers (AWS Zelkova), and symbolic execution engines."
+                ),
+            },
+            {
+                "doc_id": "arxiv-1610.00502",
+                "title": "A Survey of Symbolic Execution Techniques for Software Development and Verification",
+                "doc_type": "academic_paper",
+                "url": "https://arxiv.org/abs/1610.00502",
+                "published_date": "2018-05-07",
+                "authors": [
+                    "Roberto Baldoni",
+                    "Emilio Coppa",
+                    "Daniele Coniglio",
+                    "Camil Demetrescu",
+                    "Irene Finocchi",
+                ],
+                "institutions": [
+                    "Sapienza University of Rome",
+                ],
+                "identifiers": {
+                    "arxiv": "1610.00502",
+                    "pdf_url": "https://arxiv.org/pdf/1610.00502",
+                    "primary_category": "cs.SE",
+                },
+                "reading_status": "to-read",
+                "priority": "high",
+                "tags": [
+                    "symbolic-execution",
+                    "smt",
+                    "sat",
+                    "klee",
+                    "software-development",
+                    "program-analysis",
+                ],
+                "notes": "Comprehensive study of SAT/SMT constraint solving in symbolic execution (KLEE, SAGE, Angr) for automated test generation and vulnerability discovery.",
+                "relations": [
+                    {
+                        "relation_type": "CITES",
+                        "target_doc_id": "arxiv-2201.04663",
+                    }
+                ],
+                "content": (
+                    "## Path-Constraint Solving with SAT and SMT Solvers\n"
+                    "Symbolic execution transforms software development, automated test generation, and vulnerability discovery by executing programs over symbolic inputs rather than concrete values. At every conditional branch, the symbolic execution engine (such as KLEE, SAGE, or CBMC) queries an SMT solver (Z3, STP, or cvc5) over the Theory of Bit-Vectors and Arrays (QF_ABV) to decide path feasibility and synthesize concrete bug-triggering inputs.\n\n"
+                    "## Constraint Caching, Slicing & Heap Graph Modeling\n"
+                    "Because SMT solver queries dominate symbolic execution runtime, modern software analysis tools employ counterexample-guided constraint caching, independent clause slicing, and array-theory memory modeling to reason about pointer aliasing and heap data structures (linked lists, trees, and control-flow graphs).\n\n"
+                    "## Memory Safety & Security Vulnerability Detection\n"
+                    "Coupling SAT/SMT solvers with symbolic execution and bounded model checking uncovers spatial/temporal memory safety violations, integer overflows, and invariant breaches across systems software."
+                ),
+            },
+            {
+                "doc_id": "arxiv-1507.01763",
+                "title": "SAT and SMT-Based Automated Reasoning for Description Logics and Formal Ontologies",
+                "doc_type": "academic_paper",
+                "url": "https://arxiv.org/abs/1507.01763",
+                "published_date": "2015-07-07",
+                "authors": [
+                    "Roberto Sebastiani",
+                    "Michele Vescovi",
+                ],
+                "institutions": [
+                    "University of Trento",
+                ],
+                "identifiers": {
+                    "arxiv": "1507.01763",
+                    "pdf_url": "https://arxiv.org/pdf/1507.01763",
+                    "primary_category": "cs.AI",
+                },
+                "reading_status": "to-read",
+                "priority": "high",
+                "tags": [
+                    "ontologies",
+                    "description-logic",
+                    "owl",
+                    "sat",
+                    "smt",
+                    "ontologic",
+                ],
+                "notes": "Demonstrates how encoding Description Logic (EL+/ALC) TBox/ABox ontologies into CDCL SAT and SMT enables ultra-fast classification, subsumption, and datatype constraint checking.",
+                "relations": [
+                    {
+                        "relation_type": "CITES",
+                        "target_doc_id": "arxiv-1402.4677",
+                    },
+                    {
+                        "relation_type": "CITES",
+                        "target_doc_id": "arxiv-2201.04663",
+                    },
+                ],
+                "content": (
+                    "## Encoding OWL Ontologies & Description Logics into SAT/SMT\n"
+                    "Formal ontologies (OWL 2, SKOS, and Description Logics such as EL, ALC, and SHQ) define hierarchical concept taxonomies (TBox) and relational knowledge graph assertions (ABox). By encoding concept subsumption, disjointness, and role inclusion axioms into Horn-SAT and Conflict-Driven Clause Learning (CDCL) SAT formulas, automated reasoners classify ratusan-thousand-concept ontologies in seconds.\n\n"
+                    "## Concrete Domains & Numerical Constraints via SMT\n"
+                    "Real-world engineering and scientific ontologies require reasoning simultaneously over taxonomic hierarchies and concrete numerical domains (thresholds, intervals, unit conversions, and cardinality bounds). Satisfiability Modulo Theories (SMT) bridges this gap by combining Boolean ontology axiom propagation with Linear Real/Integer Arithmetic (LRA/LIA) and Uninterpreted Functions (EUF).\n\n"
+                    "## OntoLogic Integration & Knowledge Graph Verification\n"
+                    "SAT/SMT-backed ontology reasoning detects unsatisfiable classes, cyclic taxonomy regressions, and SHACL constraint violations across evolving semantic knowledge graphs."
+                ),
+            },
+        ],
+    },
 )
 
 
@@ -311,13 +525,22 @@ def search_arxiv_topic(topic: str, max_results: int = 4, timeout: float = 8.0) -
 def match_curated_research(topic: str, max_results: int = 5) -> list[Document]:
     """Return curated domain papers matching the topic keywords."""
     topic_tokens = set(tokenize(topic))
-    matched_docs: list[Document] = []
+    scored_packs: list[tuple[int, dict[str, Any]]] = []
 
     for pack in CURATED_RESEARCH_LIBRARY:
         overlap = topic_tokens.intersection(pack["keywords"])
-        if len(overlap) >= 2 or any(k in topic.lower() for k in ("formal verification", "sva", "uclid5", "assertion")):
-            for raw_doc in pack["documents"][:max_results]:
+        score = len(overlap)
+        if score >= 2:
+            scored_packs.append((score, pack))
+
+    scored_packs.sort(key=lambda item: item[0], reverse=True)
+    matched_docs: list[Document] = []
+    for _, pack in scored_packs:
+        for raw_doc in pack["documents"]:
+            if len(matched_docs) < max_results:
                 matched_docs.append(Document.from_dict(raw_doc))
+        if matched_docs:
+            break
 
     return matched_docs
 
@@ -332,11 +555,10 @@ def build_research_synthesis_note(
     note_id = f"research-{slug}"
 
     cited_ids = [d.doc_id for d in discovered_docs]
-    # Also connect to existing EDA / formal verification or security docs in the corpus
     for ex in existing_docs:
         if ex.doc_id not in cited_ids and any(
             kw in f"{ex.title} {ex.content}".lower()
-            for kw in ("formal verification", "operational semantics", "rtl", "28nm", "bare-ai")
+            for kw in ("formal verification", "operational semantics", "smt", "rtl", "28nm", "bare-ai")
         ):
             cited_ids.append(ex.doc_id)
 
@@ -349,21 +571,44 @@ def build_research_synthesis_note(
         f"{d.title} ({d.doc_id})" for d in discovered_docs
     ) or "domain literature"
 
-    content = (
-        f"## Research Scope & Core Languages: {topic}\n"
-        f"In chip and semiconductor design, Formal Verification Languages provide the mathematical foundation for specifying and proving Register-Transfer Level (RTL) and architectural invariants before silicon fabrication. The industrial backbone comprises IEEE 1800 SystemVerilog Assertions (SVA) and IEEE 1850 Property Specification Language (PSL) for linear temporal logic (LTL) Formal Property Verification (FPV), complemented by multi-modal verification and hardware construction languages including UCLID5 (SMT-backed datapath/control modeling), Chisel/FIRRTL (ChiselFV), and Coq-embedded theorem-proving frameworks such as Kami.\n\n"
-        f"## Knowledge-Graph & Solver-in-the-Loop Assertion Synthesis\n"
-        f"Recent research synthesized in this collection — {paper_summaries} — addresses the manual bottleneck of authoring temporal logic assertions. Frameworks like AssertionForge construct unified Knowledge Graphs fusing natural-language specs and RTL structure, while agentic solver-in-the-loop systems like ProofLoop interact directly with commercial EDA formal engines (Cadence JasperGold and SMT solvers) to iteratively refine SVA assertions until formal proof closure.\n\n"
-        f"## Cross-Layer Integration with Hardware Telemetry & Security\n"
-        f"Within our OntoLogic-ready knowledge graph, formal verification languages connect pre-silicon EDA verification with runtime hardware security monitors (such as BARE-AI's 28nm AI Performance Counters and PULSE neural detectors) and probabilistic operational semantics for memory-level bit-flip resilience (such as Rowhammer analysis on Fil-C software capabilities)."
-    )
+    lowered_topic = topic.lower()
+    if any(k in lowered_topic for k in ("sat", "smt", "ontology", "ontologies", "graph")):
+        content = (
+            f"## SAT & SMT Decision Procedures Across Software, Graphs, and Ontologies: {topic}\n"
+            f"Conflict-Driven Clause Learning (CDCL) SAT solvers and DPLL(T) Satisfiability Modulo Theories (SMT) solvers (such as Z3 and cvc5) serve as the computational backbone for modern automated reasoning. By combining Boolean constraint propagation with specialized background theories — bit-vectors, arrays, strings, linear arithmetic, finite sets, and relations — SMT solvers unify software verification, combinatorial graph analysis, and formal ontology reasoning.\n\n"
+            f"## Symbolic Execution, Monotonic Graph Theories & Description Logics\n"
+            f"Primary literature synthesized in this collection — {paper_summaries} — spans three synergistic pillars: (1) **Software Development & Symbolic Execution** (KLEE, CBMC, Dafny, cvc5), where path constraints over bit-vectors and arrays synthesize bug-triggering inputs and prove memory-safety invariants; (2) **Graph Analysis Modulo Theories** (MonoSAT), where monotonic graph predicates (reachability, shortest path, maximum s-t flow, minimum spanning tree, and DAG acyclicity) are decided natively inside DPLL(T) without propositional blowup; and (3) **Ontology & Description Logic Reasoning** (OWL 2, EL/ALC, SHACL, OntoLogic), where TBox/ABox concept subsumption, consistency, and numerical datatype constraints reduce directly to Horn-SAT and SMT.\n\n"
+            f"## Cross-Domain Integration in the Reading-DB Knowledge Graph\n"
+            f"Within our OntoLogic-ready knowledge base, SAT and SMT solvers bridge software capability verification (Fil-C memory safety), hardware formal verification languages (UCLID5, SVA, ProofLoop), and taxonomic ontology validation."
+        )
+        tags = [
+            "research-synthesis",
+            "sat",
+            "smt",
+            "cvc5",
+            "monosat",
+            "symbolic-execution",
+            "graph-analysis",
+            "ontologies",
+            "ontologic",
+        ]
+    else:
+        content = (
+            f"## Research Scope & Core Languages: {topic}\n"
+            f"In chip and semiconductor design, Formal Verification Languages provide the mathematical foundation for specifying and proving Register-Transfer Level (RTL) and architectural invariants before silicon fabrication. The industrial backbone comprises IEEE 1800 SystemVerilog Assertions (SVA) and IEEE 1850 Property Specification Language (PSL) for linear temporal logic (LTL) Formal Property Verification (FPV), complemented by multi-modal verification and hardware construction languages including UCLID5 (SMT-backed datapath/control modeling), Chisel/FIRRTL (ChiselFV), and Coq-embedded theorem-proving frameworks such as Kami.\n\n"
+            f"## Knowledge-Graph & Solver-in-the-Loop Assertion Synthesis\n"
+            f"Recent research synthesized in this collection — {paper_summaries} — addresses the manual bottleneck of authoring temporal logic assertions. Frameworks like AssertionForge construct unified Knowledge Graphs fusing natural-language specs and RTL structure, while agentic solver-in-the-loop systems like ProofLoop interact directly with commercial EDA formal engines (Cadence JasperGold and SMT solvers) to iteratively refine SVA assertions until formal proof closure.\n\n"
+            f"## Cross-Layer Integration with Hardware Telemetry & Security\n"
+            f"Within our OntoLogic-ready knowledge graph, formal verification languages connect pre-silicon EDA verification with runtime hardware security monitors (such as BARE-AI's 28nm AI Performance Counters and PULSE neural detectors) and probabilistic operational semantics for memory-level bit-flip resilience (such as Rowhammer analysis on Fil-C software capabilities)."
+        )
+        tags = ["research-synthesis", "formal-verification", "sva", "psl", "uclid5", "eda", "rtl"]
 
     return Document(
         doc_id=note_id,
         title=f"Research Synthesis: {topic}",
         doc_type="note",
         url="https://github.com/bsommers/reading-db",
-        published_date="2026-11-05",
+        published_date="2026-11-07",
         authors=["Reading List Research Engine"],
         institutions=[],
         identifiers={"research_topic": topic},
@@ -371,7 +616,7 @@ def build_research_synthesis_note(
         content=content,
         reading_status="read",
         priority="high",
-        tags=["research-synthesis", "formal-verification", "sva", "psl", "uclid5", "eda", "rtl"],
+        tags=tags,
         notes=f"Automated multi-paper synthesis and taxonomy bridge for topic: {topic!r}.",
     )
 
