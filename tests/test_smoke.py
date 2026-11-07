@@ -239,6 +239,67 @@ class ReadingListScaffoldTests(unittest.TestCase):
             self.assertIn("arxiv-1507.01763", doc_ids_after)
             self.assertIn("research-sat-and-smt-solvers-applications-in-software", doc_ids_after)
 
+    def test_command_switches_subcommands_db_targeting(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_dir = Path(tmp) / "custom-reading-db"
+            db_dir.mkdir(parents=True)
+            shutil.copyfile(FIXTURE_PATH, db_dir / "corpus.json")
+
+            # Format: reading_list.cli research [switches] add
+            rc1 = main(
+                [
+                    "research",
+                    "-d",
+                    str(db_dir),
+                    "-t",
+                    "SAT and SMT solvers applications in software development, graph analysis, and ontologies",
+                    "add",
+                ]
+            )
+            self.assertEqual(rc1, 0)
+            self.assertIn("arxiv-1402.4677", {d.doc_id for d in load_corpus(db_dir / "corpus.json")})
+            self.assertTrue((db_dir / "index.html").exists())
+
+            # Format: reading_list.cli add [switches] [subcommand]
+            rc2 = main(
+                [
+                    "add",
+                    "--db",
+                    str(db_dir),
+                    "--title",
+                    "Custom Monotonic Graph Note",
+                    "--type",
+                    "note",
+                    "--text",
+                    "MonoSAT reachability and shortest path SMT predicates.",
+                    "--cites",
+                    "arxiv-1402.4677",
+                    "--priority",
+                    "high",
+                    "publish",
+                ]
+            )
+            self.assertEqual(rc2, 0)
+            docs = {d.doc_id: d for d in load_corpus(db_dir / "corpus.json")}
+            self.assertIn("custom-monotonic-graph-note", docs)
+
+            # Format: reading_list.cli status [switches]
+            rc3 = main(
+                [
+                    "status",
+                    "custom-monotonic-graph-note",
+                    "-d",
+                    str(db_dir),
+                    "--set",
+                    "read",
+                ]
+            )
+            self.assertEqual(rc3, 0)
+            self.assertEqual(
+                {d.doc_id: d for d in load_corpus(db_dir / "corpus.json")}["custom-monotonic-graph-note"].reading_status,
+                "read",
+            )
+
     def test_cli_build_end_to_end(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp)
