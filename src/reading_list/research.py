@@ -11,6 +11,7 @@ from typing import Any
 from reading_list.chunker import classify_content, tokenize
 from reading_list.enrich import extract_arxiv_id, structure_abstract_into_sections
 from reading_list.models import Document, DocumentRelation
+from reading_list.research_ai_security import AI_SECURITY_DOCUMENTS, AI_SECURITY_KEYWORDS
 
 CURATED_RESEARCH_LIBRARY: tuple[dict[str, Any], ...] = (
     {
@@ -436,6 +437,10 @@ CURATED_RESEARCH_LIBRARY: tuple[dict[str, Any], ...] = (
             },
         ],
     },
+    {
+        "keywords": AI_SECURITY_KEYWORDS,
+        "documents": AI_SECURITY_DOCUMENTS,
+    },
 )
 
 
@@ -554,11 +559,17 @@ def build_research_synthesis_note(
     slug = _slugify(topic)
     note_id = f"research-{slug}"
 
+    is_ai_security = len(set(tokenize(topic)).intersection(AI_SECURITY_KEYWORDS)) >= 2
+    link_keywords = (
+        ("guardrail", "sec-bench", "prompt injection", "jailbreak")
+        if is_ai_security
+        else ("formal verification", "operational semantics", "smt", "rtl", "28nm", "bare-ai")
+    )
+
     cited_ids = [d.doc_id for d in discovered_docs]
     for ex in existing_docs:
         if ex.doc_id not in cited_ids and any(
-            kw in f"{ex.title} {ex.content}".lower()
-            for kw in ("formal verification", "operational semantics", "smt", "rtl", "28nm", "bare-ai")
+            kw in f"{ex.title} {ex.content}".lower() for kw in link_keywords
         ):
             cited_ids.append(ex.doc_id)
 
@@ -572,7 +583,25 @@ def build_research_synthesis_note(
     ) or "domain literature"
 
     lowered_topic = topic.lower()
-    if any(k in lowered_topic for k in ("sat", "smt", "ontology", "ontologies", "graph")):
+    if is_ai_security:
+        content = (
+            f"## Why Per-Turn Evaluation Is Not Enough: {topic}\n"
+            "Multi-turn attacks such as Crescendo (`arxiv-2404.01833`) start with benign-looking requests and escalate gradually by building on the model's own replies, so each individual turn can pass a stateless check while the conversation as a whole does not. Defenses in this collection therefore score the trajectory rather than the turn.\n\n"
+            "## Session-Level Detection Approaches\n"
+            f"Collected literature — {paper_summaries} — spans: (1) **conversation-level scoring** (Peak + Accumulation's proxy-layer formula, THRD's time-evolving risk score, DeepContext's recurrent hidden state, PsychoPass's embedding-space geometry, Defensive M2S's compressed histories); (2) **agent runtime monitoring** over tool calls and execution traces (NEXUS, AgentTrust, ProbGuard, and a fraud-detection-style feature layer for adversarial interaction patterns); and (3) **taxonomies and surveys** (SoK on jailbreak guardrails, SoK on prompt injection against agentic coding assistants, and a layered attack-surface survey with a temporality axis that reports no benchmark coverage of cross-session failures).\n\n"
+            "## Endpoint View & Open Gaps\n"
+            "On the endpoint, vendor and CSA material argues that EDR sees a trusted agent process doing authorized work and so cannot see agent-level manipulation (for example MCP-delivered injection). Much of the evidence is small, synthetic, or vendor-authored, results are not comparable across papers, and cross-session attacks remain largely unaddressed."
+        )
+        tags = [
+            "research-synthesis",
+            "ai-security",
+            "multi-turn",
+            "crescendo",
+            "trajectory-monitoring",
+            "agent-runtime",
+            "endpoint",
+        ]
+    elif any(k in lowered_topic for k in ("sat", "smt", "ontology", "ontologies", "graph")):
         content = (
             f"## SAT & SMT Decision Procedures Across Software, Graphs, and Ontologies: {topic}\n"
             f"Conflict-Driven Clause Learning (CDCL) SAT solvers and DPLL(T) Satisfiability Modulo Theories (SMT) solvers (such as Z3 and cvc5) serve as the computational backbone for modern automated reasoning. By combining Boolean constraint propagation with specialized background theories — bit-vectors, arrays, strings, linear arithmetic, finite sets, and relations — SMT solvers unify software verification, combinatorial graph analysis, and formal ontology reasoning.\n\n"

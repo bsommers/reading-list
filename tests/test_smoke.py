@@ -239,6 +239,50 @@ class ReadingListScaffoldTests(unittest.TestCase):
             self.assertIn("arxiv-1507.01763", doc_ids_after)
             self.assertIn("research-sat-and-smt-solvers-applications-in-software", doc_ids_after)
 
+    def test_research_ai_security_trajectory_pack(self) -> None:
+        topic = (
+            "AI security: endpoint perspective, and tracking the trajectory of AI sessions, "
+            "chats and transactions to detect crescendo and escalation attacks"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            db_dir = Path(tmp) / "reading-db"
+            db_dir.mkdir(parents=True)
+            shutil.copyfile(FIXTURE_PATH, db_dir / "corpus.json")
+            shutil.copyfile(README_PATH, db_dir / "README.md")
+
+            rc = main(["research", "-d", str(db_dir), "-n", "19", "-t", topic])
+            self.assertEqual(rc, 0)
+            docs = {d.doc_id: d for d in load_corpus(db_dir / "corpus.json")}
+
+            for doc_id in (
+                "arxiv-2404.01833",
+                "arxiv-2602.11247",
+                "arxiv-2602.16935",
+                "arxiv-2606.01738",
+                "arxiv-2606.03136",
+                "arxiv-2607.19356",
+                "note-2026-csa-agentjacking-mcp-sentry",
+                "note-2026-darkreading-ai-coding-tools-endpoint",
+            ):
+                self.assertIn(doc_id, docs)
+
+            # Unreadable sources must stay flagged as unverified.
+            self.assertIn("NOT READ", docs["note-2026-darkreading-ai-coding-tools-endpoint"].notes)
+            # Web-source notes are notes, not papers.
+            self.assertEqual(docs["note-2026-zenity-device-based-ai-security"].doc_type, "note")
+
+            synthesis = docs["research-ai-security-endpoint-perspective-and-trackin"]
+            cited = {r.target_doc_id for r in synthesis.relations}
+            self.assertIn("arxiv-2404.01833", cited)
+            self.assertIn("Why Per-Turn Evaluation Is Not Enough", synthesis.content)
+
+    def test_ai_security_pack_does_not_capture_other_topics(self) -> None:
+        from reading_list.research import match_curated_research
+
+        formal = match_curated_research("Formal verification languages in chip and semiconductor design")
+        self.assertTrue(formal)
+        self.assertFalse(any(d.doc_id == "arxiv-2404.01833" for d in formal))
+
     def test_command_switches_subcommands_db_targeting(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             db_dir = Path(tmp) / "custom-reading-db"
