@@ -12,6 +12,7 @@ from reading_list.chunker import classify_content, tokenize
 from reading_list.enrich import extract_arxiv_id, structure_abstract_into_sections
 from reading_list.models import Document, DocumentRelation
 from reading_list.research_ai_security import AI_SECURITY_DOCUMENTS, AI_SECURITY_KEYWORDS
+from reading_list.research_enclaves_os import ENCLAVES_OS_DOCUMENTS, ENCLAVES_OS_KEYWORDS
 
 CURATED_RESEARCH_LIBRARY: tuple[dict[str, Any], ...] = (
     {
@@ -441,6 +442,10 @@ CURATED_RESEARCH_LIBRARY: tuple[dict[str, Any], ...] = (
         "keywords": AI_SECURITY_KEYWORDS,
         "documents": AI_SECURITY_DOCUMENTS,
     },
+    {
+        "keywords": ENCLAVES_OS_KEYWORDS,
+        "documents": ENCLAVES_OS_DOCUMENTS,
+    },
 )
 
 
@@ -559,12 +564,24 @@ def build_research_synthesis_note(
     slug = _slugify(topic)
     note_id = f"research-{slug}"
 
-    is_ai_security = len(set(tokenize(topic)).intersection(AI_SECURITY_KEYWORDS)) >= 2
-    link_keywords = (
-        ("guardrail", "sec-bench", "prompt injection", "jailbreak")
-        if is_ai_security
-        else ("formal verification", "operational semantics", "smt", "rtl", "28nm", "bare-ai")
+    is_enclaves_os = len(set(tokenize(topic)).intersection(ENCLAVES_OS_KEYWORDS)) >= 3
+    is_ai_security = (
+        not is_enclaves_os
+        and len(set(tokenize(topic)).intersection(AI_SECURITY_KEYWORDS)) >= 2
     )
+    if is_enclaves_os:
+        link_keywords: tuple[str, ...] = (
+            "invisicaps",
+            "fil-c",
+            "software capabilities",
+            "speculative execution",
+            "enclave",
+            "rowhammer",
+        )
+    elif is_ai_security:
+        link_keywords = ("guardrail", "sec-bench", "prompt injection", "jailbreak")
+    else:
+        link_keywords = ("formal verification", "operational semantics", "smt", "rtl", "28nm", "bare-ai")
 
     cited_ids = [d.doc_id for d in discovered_docs]
     for ex in existing_docs:
@@ -583,7 +600,31 @@ def build_research_synthesis_note(
     ) or "domain literature"
 
     lowered_topic = topic.lower()
-    if is_ai_security:
+    if is_enclaves_os:
+        content = (
+            f"## Co-Designing Non-Speculative Enclaves & Linear Address Space OSes: {topic}\n"
+            "Traditional multi-address-space operating systems and commercial TEEs (such as Intel SGX) suffer from a dual vulnerability: (1) virtual-memory page-table switches impose heavy TLB shootdown and serialization penalties that discourage fine-grained zero-trust compartmentalization, while (2) out-of-order speculative execution leaks enclave secrets across page and cache boundaries via transient loads and microarchitectural side channels.\n\n"
+            "## Four Architectural Pillars Synthesized in This Collection\n"
+            f"Primary literature in this synthesis — {paper_summaries} — establishes a cohesive blueprint for a hardened custom operating system built around zero-trust blast chambers:\n"
+            "- **1. Non-Speculative Execution Inside Enclaves (`arxiv-1812.09822`, `arxiv-2302.12108`, `usenix-2016-sanctum`):** MI6 and Sanctum partition DRAM regions and LLC sets while hardware-blocking speculative loads from crossing enclave protection boundaries and executing a deterministic microarchitectural `purge` instruction on domain switches. ProSpeCT refines this further with pipeline secret-taint tracking so only secret-dependent enclave instructions execute non-speculatively at the ROB head while public code speculates at full out-of-order speed.\n"
+            "- **2. Linear Capabilities in a Flat Linear Address Space (`arxiv-2302.13863`):** Capstone introduces move-only, non-aliasing *linear capabilities* and revocation trees (`mrev`) in a shared linear address space. Because hardware forbids copying a linear capability, exclusive memory ownership is guaranteed without trusting the OS kernel or page tables.\n"
+            "- **3. Single-Address-Space Capability Operating Systems (`cambridge-2021-cherios-sasos`):** CheriOS decouples virtual address translation from protection in a global 64-bit linear address space, isolating every OS service, driver, and user task in capability-bounded compartments with hardware-accelerated temporal quarantine.\n"
+            "- **4. Zero-Trust Blast Chambers & Live Fault Recovery (`usenix-osdi20-redleaf`, `usenix-osdi20-theseus`):** RedLeaf and Theseus execute inside a single flat linear address space and enforce zero state-spill across fine-grained domains ('blast chambers') via linear exchange-heap ownership (`RRef<T>`) and bijective `MappedPages`, allowing a panicked or compromised blast chamber to be unwound and hot-restarted in microseconds without corrupting neighboring domains.\n\n"
+            "## Cross-Graph Links to Software Capabilities & Formal Hardware Verification\n"
+            "Within `reading-db`, this cluster connects directly to software capability pointers (`fil-c-2025-invisicaps`), Rowhammer fault-injection analysis (`arxiv-2603.20445`), and formal SMT verification of speculative and enclave invariants (`arxiv-2208.03699`)."
+        )
+        tags = [
+            "research-synthesis",
+            "secure-enclaves",
+            "non-speculative",
+            "linear-address-space",
+            "linear-capabilities",
+            "blast-chambers",
+            "zero-trust",
+            "sasos",
+            "custom-os",
+        ]
+    elif is_ai_security:
         content = (
             f"## Why Per-Turn Evaluation Is Not Enough: {topic}\n"
             "Multi-turn attacks such as Crescendo (`arxiv-2404.01833`) start with benign-looking requests and escalate gradually by building on the model's own replies, so each individual turn can pass a stateless check while the conversation as a whole does not. Defenses in this collection therefore score the trajectory rather than the turn.\n\n"
