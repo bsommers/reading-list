@@ -12,7 +12,7 @@ Core Python tooling, research agent, semantic chunker, conceptual taxonomy class
 |---|---|---|
 | `src/reading_list/` | Importable Python package (`models`, `taxonomy`, `chunker`, `graph`, `enrich`, `research`, `kitsumiko`, `site`, `cli`) | tracked |
 | `tests/` | Unit/smoke tests (`test_smoke.py`) and minimal demo corpus (`fixtures/seed_corpus.json`) | tracked |
-| `docs/` | Architecture (`architecture.md`), OntoLogic roadmap, and ADRs (`docs/adr/`) | tracked |
+| `docs/` | Architecture (`architecture.md`), enclave/SASOS/blast-chamber synthesis (`secure-enclaves-linear-address-space-blast-chamber-os.md`), OntoLogic roadmap, and ADRs (`docs/adr/`) | tracked |
 | `input/` | Local working corpus manifest (`corpus.json`) | ignored except `README.md` |
 | `output/` | Local reproducible knowledge graph, chunks, word cloud, taxonomy, and `index.html` | ignored except `README.md` |
 | `README.md` | Project overview, layout table, quickstart, and status | tracked |
